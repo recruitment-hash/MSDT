@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MSDT — Management Style Diagnostic Test</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<!-- Neon Serverless Driver CDN -->
-<script src="https://unpkg.com/@neondatabase/serverless@latest/index.js"></script>
+<!-- Neon Serverless Driver via ES Module / Bundle yang aman untuk browser -->
+<script src="https://cdn.jsdelivr.net/npm/@neondatabase/serverless@0.6.0/index.bundle.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -348,7 +348,6 @@
 const RECRUITER_PIN = "190400";
 const LOCAL_STORAGE_KEY = "msdt_candidates_v1";
 
-// Connection String Neon Anda yang otomatis tersemat
 let neonConnString = localStorage.getItem("msdt_neon_conn") || "postgresql://neondb_owner:npg_hX93oHbQjWgM@ep-red-shadow-azau1v1w-pooler.c-3.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
 let neonPool = null;
 
@@ -362,7 +361,7 @@ function initNeonClient(){
     } catch(e){
       console.warn("Gagal menginisialisasi Neon pool:", e);
       neonPool = null;
-      document.getElementById("neon-status").textContent = "Gagal Terhubung (Mode Lokal)";
+      document.getElementById("neon-status").textContent = "Mode Lokal (LocalStorage)";
       document.getElementById("neon-status").className = "font-mono text-amber-400";
     }
   } else {
@@ -370,7 +369,11 @@ function initNeonClient(){
     document.getElementById("neon-status").className = "font-mono text-amber-400";
   }
 }
-initNeonClient();
+
+// Inisialisasi setelah halaman selesai dimuat sepenuhnya
+window.addEventListener("DOMContentLoaded", () => {
+  initNeonClient();
+});
 
 function toggleConfigModal(){
   const m = document.getElementById("config-modal");
