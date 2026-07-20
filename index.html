@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSDT - Management Style Diagnostic Test</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #F5F6F2;
+    color: #14192B;
+    margin: 0;
+    padding: 0;
+  }
+  .screen {
+    display: none;
+    padding: 40px 20px;
+    max-width: 600px;
+    margin: 40px auto;
+    background: #fff;
+    border: 1px solid #D8D9CF;
+    border-radius: 4px;
+  }
+  .screen.active {
+    display: block;
+  }
+  h1, h2 {
+    margin-top: 0;
+  }
+  button {
+    background: #14192B;
+    color: #F5F6F2;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    width: 100%;
+    margin-top: 10px;
+  }
+  button:hover {
+    background: #2A3352;
+  }
+  .btn-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+  }
+  input, select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #D8D9CF;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+  .status-bar {
+    background: #14192B;
+    color: #fff;
+    padding: 8px 15px;
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<div class="status-bar">
+  <span>Status: <strong id="status-text">Mode Lokal (LocalStorage)</strong></span>
+</div>
+
+<!-- HOME SCREEN -->
+<div id="screen-home" class="screen active" style="text-align: center;">
+  <h1>MANAGEMENT STYLE DIAGNOSTIC TEST</h1>
+  <p>Pilih peran Anda untuk melanjutkan:</p>
+  <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 15px;">
+    <button onclick="goTo('screen-candidate-intro')">Masuk sebagai Kandidat</button>
+    <button onclick="goTo('screen-recruiter-login')" style="background: #3B5BA5;">Masuk sebagai Rekruter</button>
+  </div>
+</div>
+
+<!-- CANDIDATE INTRO -->
+<div id="screen-candidate-intro" class="screen">
+  <h2>Data Diri Kandidat</h2>
+  <form onsubmit="startTest(event)">
+    <label>Nama Lengkap</label>
+    <input type="text" id="c-name" required placeholder="Contoh: Budi Santoso">
+    
+    <label>Email</label>
+    <input type="email" id="c-email" required placeholder="budi@email.com">
+    
+    <label>Posisi yang Dilamar</label>
+    <input type="text" id="c-pos" required placeholder="Team Leader">
+    
+    <div class="btn-group">
+      <button type="button" onclick="goTo('screen-home')" style="background: #666;">Kembali</button>
+      <button type="submit">Mulai Tes →</button>
+    </div>
+  </form>
+</div>
+
+<!-- RECRUITER LOGIN -->
+<div id="screen-recruiter-login" class="screen">
+  <h2>Login Rekruter</h2>
+  <form onsubmit="recruiterLogin(event)">
+    <label>Masukkan PIN (Contoh: 1234)</label>
+    <input type="password" id="r-pin" required placeholder="••••">
+    <p id="err-msg" style="color: red; display: none; font-size: 14px;">PIN salah! Gunakan PIN: 1234</p>
+    
+    <div class="btn-group">
+      <button type="button" onclick="goTo('screen-home')" style="background: #666;">Kembali</button>
+      <button type="submit">Masuk Dashboard</button>
+    </div>
+  </form>
+</div>
+
+<!-- DASHBOARD -->
+<div id="screen-dashboard" class="screen">
+  <h2>Dashboard Rekruter</h2>
+  <p>Selamat datang di panel rekruter. Data kandidat tersimpan di LocalStorage.</p>
+  <div id="candidate-list" style="margin-top: 20px; font-size: 14px;">
+    <!-- List kandidat akan muncul di sini -->
+  </div>
+  <button onclick="goTo('screen-home')" style="margin-top: 30px; background: #666;">Keluar</button>
+</div>
+
+<script>
+console.log("Script loaded successfully!");
+
+function goTo(screenId) {
+  console.log("Navigating to:", screenId);
+  var screens = document.querySelectorAll(".screen");
+  for (var i = 0; i < screens.length; i++) {
+    screens[i].classList.remove("active");
+  }
+  var target = document.getElementById(screenId);
+  if (target) {
+    target.classList.add("active");
+  } else {
+    console.error("Screen not found:", screenId);
+  }
+}
+
+function startTest(e) {
+  e.preventDefault();
+  var name = document.getElementById("c-name").value;
+  alert("Halo " + name + "! Tes simulasi dimulai. (Tekan OK untuk kembali ke beranda)");
+  goTo('screen-home');
+  return false;
+}
+
+function recruiterLogin(e) {
+  e.preventDefault();
+  var pin = document.getElementById("r-pin").value;
+  if (pin === "1234") {
+    document.getElementById("err-msg").style.display = "none";
+    goTo('screen-dashboard');
+  } else {
+    document.getElementById("err-msg").style.display = "block";
+  }
+  return false;
+}
+</script>
+
+</body>
+</html>
