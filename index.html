@@ -16,6 +16,12 @@
   @keyframes fadeIn { from { opacity:0; transform: translateY(6px);} to {opacity:1; transform: translateY(0);} }
   .spinner { border: 3px solid #e2e8f0; border-top-color: #4f46e5; border-radius: 50%; width: 2rem; height: 2rem; animation: spin .7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg);} }
+  
+  @media print {
+    body * { visibility: hidden; }
+    #printableReport, #printableReport * { visibility: visible; }
+    #printableReport { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; box-shadow: none; border: none; }
+  }
 </style>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800">
@@ -65,15 +71,6 @@ const ARCHETYPES = {"executive": {"label": "Executive", "code": "E", "color": "i
 const ARCHETYPE_ORDER = ["executive","developer","benevolent_autocrat","bureaucrat","compromiser","missionary","autocrat","deserter"];
 
 /* ---------------------------- Scoring engine ---------------------------- */
-// Faithfully reproduces the "Otomatis Scoring" logic from the source MSDT
-// workbook: for each of the 8 dimension columns c=1..8,
-//   A_c = count of "a" among the c-th consecutive block of 8 items
-//         (items 8*(c-1)+1 .. 8*c)
-//   B_c = count of "b" among the c-th column-set of 8 items
-//         (items c, c+8, c+16, ... c+56)
-//   JUMLAH_c = A_c + B_c + KOREKSI_c
-// TO/RO/E are combinations of specific JUMLAH values, converted through the
-// workbook's threshold table, then classified into one of 8 archetypes.
 const KOREKSI = [1, 2, 1, 0, 3, -1, 0, -4];
 
 function computeScores(answers) {
@@ -154,7 +151,6 @@ function renderHome() {
           ${icon("compass", "w-7 h-7")}
         </div>
         <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Management Style Diagnostic Test</h1>
-        <p class="text-slate-500 mt-2">Portal asesmen gaya manajemen berbasis model Task &amp; Relationship Orientation</p>
       </div>
       <div class="grid sm:grid-cols-2 gap-5">
         <button onclick="goCandidateStart()" class="group text-left bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 transition p-6">
@@ -441,7 +437,6 @@ function getFilteredCandidates() {
 function quadrantSVG(candidates) {
   const W = 560, H = 420, pad = 46;
   const plotW = W - pad*2, plotH = H - pad*2;
-  // Axis domain: raw TO / RO scores roughly range 8..56; use a stable domain.
   const minV = 8, maxV = 56, mid = 33.5;
   const xOf = (v) => pad + ((v - minV) / (maxV - minV)) * plotW;
   const yOf = (v) => pad + plotH - ((v - minV) / (maxV - minV)) * plotH;
@@ -626,6 +621,10 @@ function openDetail(id) {
 }
 function closeDetail() { setState({ detailCandidate: null }); }
 
+function printReport() {
+  window.print();
+}
+
 function renderDetailModal(c) {
   const answerRows = QUESTIONS.map(q => {
     const ans = c.answers[q.no] || c.answers[String(q.no)];
@@ -635,24 +634,33 @@ function renderDetailModal(c) {
     </div>`;
   }).join("");
 
+  const archInfo = ARCHETYPES[c.archetype] || { label: c.archetype, desc: "" };
+
   return `
-  <div class="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50 fade-in" onclick="if(event.target===this) closeDetail()">
-    <div class="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[85vh] flex flex-col">
+  <div class="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50 fade-in overflow-y-auto" onclick="if(event.target===this) closeDetail()">
+    <div id="printableReport" class="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] flex flex-col my-auto">
       <div class="flex items-start justify-between p-5 border-b border-slate-200">
         <div>
-          <h3 class="font-bold text-slate-900">${escapeHtml(c.full_name)}</h3>
+          <h3 class="font-bold text-slate-900 text-lg">${escapeHtml(c.full_name)}</h3>
           <p class="text-sm text-slate-500">${escapeHtml(c.email)} · ${escapeHtml(c.position)} · ${c.experience_years} th pengalaman</p>
         </div>
-        <button onclick="closeDetail()" class="text-slate-400 hover:text-slate-700">${icon("x")}</button>
+        <div class="flex items-center gap-2">
+          <button onclick="printReport()" class="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition">${icon("printer","w-4 h-4")} Print Report</button>
+          <button onclick="closeDetail()" class="text-slate-400 hover:text-slate-700">${icon("x")}</button>
+        </div>
       </div>
-      <div class="p-5 border-b border-slate-100 grid grid-cols-4 gap-3 text-center">
-        <div><div class="text-xs text-slate-400">TO</div><div class="font-bold text-slate-900">${c.score_to}</div></div>
-        <div><div class="text-xs text-slate-400">RO</div><div class="font-bold text-slate-900">${c.score_ro}</div></div>
-        <div><div class="text-xs text-slate-400">E</div><div class="font-bold text-slate-900">${c.score_e}</div></div>
-        <div>${archetypeBadge(c.archetype)}</div>
+      <div class="p-5 border-b border-slate-100 grid grid-cols-4 gap-3 text-center bg-slate-50">
+        <div><div class="text-xs text-slate-400">Task (TO)</div><div class="font-bold text-slate-900">${c.score_to}</div></div>
+        <div><div class="text-xs text-slate-400">Relationship (RO)</div><div class="font-bold text-slate-900">${c.score_ro}</div></div>
+        <div><div class="text-xs text-slate-400">Efektivitas (E)</div><div class="font-bold text-slate-900">${c.score_e}</div></div>
+        <div><div class="text-xs text-slate-400 mb-1">Arketipe</div>${archetypeBadge(c.archetype)}</div>
+      </div>
+      <div class="p-5 border-b border-slate-100 bg-indigo-50/40">
+        <h4 class="text-xs font-bold uppercase tracking-wide text-indigo-900 mb-1">Analisis Gaya Manajemen: ${archInfo.label}</h4>
+        <p class="text-xs text-slate-700 leading-relaxed">${archInfo.desc}</p>
       </div>
       <div class="p-5 overflow-y-auto flex-1">
-        <p class="text-xs font-semibold uppercase text-slate-400 mb-2">Detail Jawaban (${QUESTIONS.length} pernyataan)</p>
+        <p class="text-xs font-semibold uppercase text-slate-400 mb-2">Detail Jawaban Asesmen (${QUESTIONS.length} pernyataan)</p>
         ${answerRows}
       </div>
     </div>
