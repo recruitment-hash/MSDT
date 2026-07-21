@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MSDT — Management Style Diagnostic Test</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<!-- Muat Supabase JS via CDN UMD global agar aman dari masalah dynamic import ESM -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -91,12 +89,12 @@
   <div class="max-w-3xl w-full py-16">
     <h1 class="font-display text-4xl md:text-5xl font-medium leading-[1.05] mb-12">MANAGEMENT STYLE DIAGNOSTIC TEST</h1>
     <div class="grid sm:grid-cols-2 gap-4">
-      <button id="btn-goto-candidate" type="button" class="card p-6 text-left hover:border-black/60 border transition">
+      <button id="btn-goto-candidate" type="button" class="card p-6 text-left hover:border-black/60 border transition cursor-pointer">
         <span class="eyebrow text-black/40">01 — MASUK SEBAGAI</span>
         <p class="font-display text-2xl mt-2 mb-1">Kandidat</p>
         <p class="text-sm text-black/60">Isi identitas &amp; kerjakan kuesioner MSDT.</p>
       </button>
-      <button id="btn-goto-recruiter" type="button" class="card p-6 text-left hover:border-black/60 border transition">
+      <button id="btn-goto-recruiter" type="button" class="card p-6 text-left hover:border-black/60 border transition cursor-pointer">
         <span class="eyebrow text-black/40">02 — MASUK SEBAGAI</span>
         <p class="font-display text-2xl mt-2 mb-1">Rekruter</p>
         <p class="text-sm text-black/60">Lihat skor &amp; hasil diagnostik kandidat.</p>
@@ -204,7 +202,6 @@
         <button type="submit" class="btn-primary px-6 py-2.5 rounded-sm text-sm font-medium flex-1">Masuk</button>
       </div>
     </form>
-    <p class="text-xs text-black/40 mt-4 leading-relaxed">Akun rekruter dibuat lewat dashboard Supabase (Authentication → Users), bukan didaftarkan sendiri di halaman ini.</p>
   </div>
 </section>
 
@@ -316,25 +313,25 @@
 </div>
 
 <script>
-/* =========================================================
-   MSDT — Reddin 3-D Management Style scoring engine
-   ========================================================= */
-
 const SUPABASE_URL = "https://trtxyuzdflbleaoezvqp.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRydHh5dXpkZmxibGVhb2V6dnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1MzM3NjIsImV4cCI6MjEwMDEwOTc2Mn0.Wr8NylkTu_nVKxpK_1ZdSWmsc8QSRPTHsSLjw8_Q9co";
 
 let supabaseClient = null;
+let supabaseLoadError = null;
 
-// Inisialisasi awal client Supabase dari global UMD script
-try {
-  if (window.supabase) {
-    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+async function ensureSupabase(){
+  if (supabaseClient) return supabaseClient;
+  if (supabaseLoadError) throw supabaseLoadError;
+  try {
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+    supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return supabaseClient;
+  } catch (err) {
+    supabaseLoadError = err;
+    throw err;
   }
-} catch (e) {
-  console.error("Gagal menginisialisasi Supabase:", e);
 }
 
-// 12 pasangan pernyataan mengukur TO vs RO
 const TO_RO_ITEMS = [
   { a: "Saya menetapkan target kerja yang jelas dan menuntut pencapaiannya tepat waktu.", b: "Saya lebih dulu memastikan hubungan dan kepercayaan tim tetap terjaga." },
   { a: "Saat muncul masalah, saya langsung fokus mencari solusi teknis dan prosedural.", b: "Saat muncul masalah, saya lebih dulu menenangkan dan mendengarkan tim." },
@@ -402,7 +399,6 @@ function classify(to, ro, e, toMax, roMax, eMax){
   const highTO = to >= toMax / 2;
   const highRO = ro >= roMax / 2;
   const effective = e >= eMax / 2;
-
   if (highTO && highRO)  return effective ? "Executive" : "Compromiser";
   if (!highTO && highRO) return effective ? "Developer" : "Missionary";
   if (highTO && !highRO) return effective ? "Benevolent Autocrat" : "Autocrat";
@@ -488,9 +484,7 @@ function prevQuestion(){
 
 async function submitCandidate(){
   let to = 0, ro = 0, e = 0;
-  const toMax = TO_RO_ITEMS.length;
-  const roMax = TO_RO_ITEMS.length;
-  const eMax = EFFECT_ITEMS.length;
+  const toMax = TO_RO_ITEMS.length, roMax = TO_RO_ITEMS.length, eMax = EFFECT_ITEMS.length;
 
   questionBank.forEach(q => {
     const chosen = answers[q.id] === "A" ? q.optA : q.optB;
@@ -505,21 +499,23 @@ async function submitCandidate(){
   btn.textContent = "Mengirim...";
 
   try {
-    if (supabaseClient) {
-      await supabaseClient.from("candidates").insert({
-        name: candidateDraft.name,
-        email: candidateDraft.email,
-        position: candidateDraft.position,
-        experience: candidateDraft.experience,
-        to_score: to, ro_score: ro, e_score: e,
-        to_max: toMax, ro_max: roMax, e_max: eMax,
-        archetype: archetypeKey,
-      });
-    }
+    const client = await ensureSupabase();
+    const { error } = await client.from("candidates").insert({
+      name: candidateDraft.name,
+      email: candidateDraft.email,
+      position: candidateDraft.position,
+      experience: candidateDraft.experience,
+      to_score: to, ro_score: ro, e_score: e,
+      to_max: toMax, ro_max: roMax, e_max: eMax,
+      archetype: archetypeKey,
+    });
+    if (error) throw error;
     goTo("screen-thankyou");
   } catch (err) {
     console.error(err);
-    goTo("screen-thankyou"); // Tetap arahkan ke halaman selesai meski simpan DB gagal di klien demo
+    alert("Terjadi kendala saat mengirim jawaban ke database. Periksa koneksi Anda.");
+    btn.disabled = false;
+    btn.textContent = "Submit →";
   }
 }
 
@@ -530,15 +526,14 @@ async function recruiterLogin(ev){
   const errEl = document.getElementById("pin-error");
   errEl.classList.add("hidden");
   try {
-    if (supabaseClient) {
-      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-    }
+    const client = await ensureSupabase();
+    const { error } = await client.auth.signInWithPassword({ email, password });
+    if (error) throw error;
     document.getElementById("f-recruiter-password").value = "";
     goTo("screen-dashboard");
     await loadDashboard();
   } catch (err) {
-    errEl.textContent = "Email atau password salah / koneksi gagal.";
+    errEl.textContent = "Email atau password salah.";
     errEl.classList.remove("hidden");
   }
   return false;
@@ -546,23 +541,14 @@ async function recruiterLogin(ev){
 
 async function loadDashboard(){
   try {
-    if (supabaseClient) {
-      const { data, error } = await supabaseClient
-        .from("candidates")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      candidatesCache = (data || []).map(r => ({
-        id: r.id,
-        name: r.name,
-        email: r.email,
-        position: r.position,
-        experience: r.experience,
-        date: r.created_at,
-        scores: { to: r.to_score, ro: r.ro_score, e: r.e_score, toMax: r.to_max, roMax: r.ro_max, eMax: r.e_max },
-        archetype: r.archetype,
-      }));
-    }
+    const client = await ensureSupabase();
+    const { data, error } = await client.from("candidates").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    candidatesCache = data.map(r => ({
+      id: r.id, name: r.name, email: r.email, position: r.position, experience: r.experience, date: r.created_at,
+      scores: { to: r.to_score, ro: r.ro_score, e: r.e_score, toMax: r.to_max, roMax: r.ro_max, eMax: r.e_max },
+      archetype: r.archetype,
+    }));
   } catch (err) {
     console.error(err);
     candidatesCache = [];
@@ -581,8 +567,7 @@ function renderDashboard(){
   document.getElementById("stat-top").textContent = top ? top[0] : "—";
 
   const filterSel = document.getElementById("filter-archetype");
-  filterSel.innerHTML = '<option value="">Semua arketipe</option>' +
-    Object.keys(ARCHETYPES).map(k => `<option value="${k}">${k}</option>`).join("");
+  filterSel.innerHTML = '<option value="">Semua arketipe</option>' + Object.keys(ARCHETYPES).map(k => `<option value="${k}">${k}</option>`).join("");
 
   drawQuadrantMap("quadrant-map", list, null);
   renderTable();
@@ -604,7 +589,7 @@ function renderTable(){
   document.getElementById("empty-state").classList.toggle("hidden", filtered.length !== 0);
 
   filtered.forEach(c => {
-    const arch = ARCHETYPES[c.archetype] || { label: c.archetype, badge: "Efektif" };
+    const arch = ARCHETYPES[c.archetype] || { label: c.archetype, badge: "-" };
     const tr = document.createElement("tr");
     tr.className = "row-hover border-b border-[var(--line)] last:border-0";
     tr.onclick = () => openModal(c.id);
@@ -625,7 +610,7 @@ function renderTable(){
 function openModal(id){
   const c = candidatesCache.find(x => x.id === id);
   if (!c) return;
-  const arch = ARCHETYPES[c.archetype] || { label: c.archetype, badge: "Efektif", desc: "" };
+  const arch = ARCHETYPES[c.archetype] || { label: c.archetype, badge: "-", desc: "" };
   document.getElementById("modal-name").textContent = c.name;
   document.getElementById("modal-position").textContent = `${c.position} · ${formatDate(c.date)}`;
   document.getElementById("modal-to").textContent = `${c.scores.to}/${c.scores.toMax}`;
@@ -638,36 +623,38 @@ function openModal(id){
   badge.className = "inline-block text-xs font-medium px-3 py-1 rounded-full mb-3 " + (arch.badge === "Efektif" ? "badge-eff" : "badge-ineff");
 
   drawQuadrantMap("modal-quadrant", candidatesCache, c.id);
-
-  document.getElementById("detail-modal").classList.remove("hidden");
-  document.getElementById("detail-modal").classList.add("flex");
+  const modal = document.getElementById("detail-modal");
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
 }
 
 function closeModal(){
-  document.getElementById("detail-modal").classList.add("hidden");
-  document.getElementById("detail-modal").classList.remove("flex");
+  const modal = document.getElementById("detail-modal");
+  modal.classList.add("hidden");
+  modal.classList.remove("flex");
 }
 
 async function confirmClearData(){
   if (!confirm("Hapus seluruh data kandidat secara permanen?")) return;
   try {
-    if (supabaseClient) {
-      await supabaseClient.from("candidates").delete().not("id", "is", null);
-      await loadDashboard();
-    }
+    const client = await ensureSupabase();
+    const { error } = await client.from("candidates").delete().not("id", "is", null);
+    if (error) throw error;
+    await loadDashboard();
   } catch (err) {
     console.error(err);
+    alert("Gagal menghapus data.");
   }
 }
 
 function exportCSV(){
   const list = candidatesCache;
-  if (list.length === 0){ alert("Belum ada data untuk diekspor."); return; }
+  if (list.length === 0){ alert("Belum ada data."); return; }
   const header = ["Nama","Email","Posisi","Pengalaman","Tanggal","TO","RO","E","Arketipe","Status"];
   const rows = list.map(c => [
     c.name, c.email, c.position, c.experience, formatDate(c.date),
     `${c.scores.to}/${c.scores.toMax}`, `${c.scores.ro}/${c.scores.roMax}`, `${c.scores.e}/${c.scores.eMax}`,
-    c.archetype, ARCHETYPES[c.archetype]?.badge || ""
+    c.archetype, ARCHETYPES[c.archetype]?.badge
   ]);
   const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -681,7 +668,7 @@ function exportCSV(){
 
 function drawQuadrantMap(svgId, list, highlightId){
   const svg = document.getElementById(svgId);
-  if (!svg) return;
+  if(!svg) return;
   const pad = 30, size = 260, plotSize = size - pad * 2;
   const ink = "#14192B", line = "#D8D9CF", relate = "#2E8B78", amber = "#D98E04";
 
@@ -690,7 +677,9 @@ function drawQuadrantMap(svgId, list, highlightId){
   html += `<line x1="${pad}" y1="${size-pad}" x2="${size-pad}" y2="${size-pad}" stroke="${line}" stroke-width="1.5"/>`;
   html += `<line x1="${size/2}" y1="${pad}" x2="${size/2}" y2="${size-pad}" stroke="${line}" stroke-width="1" stroke-dasharray="3,3"/>`;
   html += `<line x1="${pad}" y1="${size/2}" x2="${size-pad}" y2="${size/2}" stroke="${line}" stroke-width="1" stroke-dasharray="3,3"/>`;
-  
+  html += `<text x="${size/2-16}" y="${size-8}" font-size="9" font-family="IBM Plex Mono" fill="${ink}">TASK →</text>`;
+  html += `<text x="4" y="${size/2}" font-size="9" font-family="IBM Plex Mono" fill="${ink}" transform="rotate(-90 10 ${size/2})">RELATION →</text>`;
+
   list.forEach(c => {
     const x = pad + (c.scores.to / c.scores.toMax) * plotSize;
     const y = (size - pad) - (c.scores.ro / c.scores.roMax) * plotSize;
@@ -700,31 +689,33 @@ function drawQuadrantMap(svgId, list, highlightId){
     const fill = eff ? relate : amber;
     html += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="${fill}" fill-opacity="${isHi ? 1 : 0.55}" stroke="${isHi ? ink : 'none'}" stroke-width="${isHi ? 1.5 : 0}"/>`;
   });
-
   svg.innerHTML = html;
 }
 
 async function logout(){
   try {
-    if (supabaseClient) await supabaseClient.auth.signOut();
+    const client = await ensureSupabase();
+    await client.auth.signOut();
   } catch (err) {}
   candidatesCache = [];
   goTo("screen-home");
 }
 
 function formatDate(iso){
-  if (!iso) return "-";
+  if(!iso) return "-";
   const d = new Date(iso);
   return d.toLocaleDateString("id-ID", { day:"2-digit", month:"short", year:"numeric" });
 }
+
 function escapeHTML(str){
-  if (!str) return "";
+  if(!str) return "";
   const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;
 }
 
-function bindEvents(){
+// Menjalankan binding setelah DOM siap sepenuhnya agar tombol responsif
+document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-goto-candidate").addEventListener("click", () => goTo("screen-candidate-intro"));
   document.getElementById("btn-goto-recruiter").addEventListener("click", () => goTo("screen-recruiter-login"));
   document.getElementById("btn-candidate-back").addEventListener("click", () => goTo("screen-home"));
@@ -749,9 +740,7 @@ function bindEvents(){
   document.getElementById("detail-modal").addEventListener("click", (e) => {
     if (e.target.id === "detail-modal") closeModal();
   });
-}
-
-bindEvents();
+});
 </script>
 </body>
 </html>
