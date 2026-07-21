@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MSDT — Management Style Diagnostic Test</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14192B;
+    --paper:#F5F6F2;
+    --paper-2:#ECEEE7;
+    --task:#3B5BA5;
+    --relate:#2E8B78;
+    --amber:#D98E04;
+    --line:#D8D9CF;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  .font-display{ font-family:'Fraunces',serif; }
+  .font-mono{ font-family:'IBM Plex Mono',monospace; }
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+  .card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:2px;
+  }
+  .btn-primary{
+    background:var(--ink);
+    color:var(--paper);
+    transition:transform .15s ease, background .15s ease;
+  }
+  .btn-primary:hover:not(:disabled){ background:#2A3352; transform:translateY(-1px); }
+  .btn-primary:disabled{ opacity:.35; cursor:not-allowed; }
+  .btn-ghost{
+    border:1px solid var(--ink);
+    color:var(--ink);
+    background:transparent;
+    transition:background .15s ease, color .15s ease;
+  }
+  .btn-ghost:hover{ background:var(--ink); color:var(--paper); }
+  .option-card{
+    border:1.5px solid var(--line);
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .option-card:hover{ border-color:var(--ink); }
+  .option-card.selected{
+    border-color:var(--ink);
+    background:var(--paper-2);
+  }
+  .option-card.selected .opt-letter{
+    background:var(--ink);
+    color:var(--paper);
+  }
+  .opt-letter{
+    font-family:'IBM Plex Mono',monospace;
+    border:1.5px solid var(--ink);
+    transition:background .15s ease, color .15s ease;
+  }
+  .progress-track{ background:var(--paper-2); }
+  .progress-fill{ background:var(--ink); transition:width .3s ease; }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    letter-spacing:.12em;
+    font-size:.7rem;
+  }
+  ::-webkit-scrollbar{ width:8px; height:8px; }
+  ::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
+  .badge-eff{ background:rgba(46,139,120,.12); color:var(--relate); }
+  .badge-ineff{ background:rgba(217,142,4,.14); color:#8a5c02; }
+  tr.row-hover:hover{ background:var(--paper-2); cursor:pointer; }
+  .fade-in{ animation:fadeIn .4s ease; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  input:focus, select:focus{ outline:2px solid var(--ink); outline-offset:1px; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- ============ HOME ============ -->
+<section id="screen-home" class="screen active min-h-screen flex items-center justify-center px-6">
+  <div class="max-w-3xl w-full py-16">
+    <h1 class="font-display text-4xl md:text-5xl font-medium leading-[1.05] mb-12">MANAGEMENT STYLE DIAGNOSTIC TEST</h1>
+    <div class="grid sm:grid-cols-2 gap-4">
+      <button onclick="goTo('screen-candidate-intro')" class="card p-6 text-left hover:border-black/60 border transition">
+        <span class="eyebrow text-black/40">01 — MASUK SEBAGAI</span>
+        <p class="font-display text-2xl mt-2 mb-1">Kandidat</p>
+        <p class="text-sm text-black/60">Isi identitas &amp; kerjakan kuesioner MSDT.</p>
+      </button>
+      <button onclick="goTo('screen-recruiter-login')" class="card p-6 text-left hover:border-black/60 border transition">
+        <span class="eyebrow text-black/40">02 — MASUK SEBAGAI</span>
+        <p class="font-display text-2xl mt-2 mb-1">Rekruter</p>
+        <p class="text-sm text-black/60">Lihat skor &amp; hasil diagnostik kandidat.</p>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CANDIDATE INTRO ============ -->
+<section id="screen-candidate-intro" class="screen min-h-screen flex items-center justify-center px-6">
+  <div class="max-w-xl w-full fade-in">
+    <p class="eyebrow text-[var(--task)] mb-3">DATA DIRI KANDIDAT</p>
+    <h2 class="font-display text-3xl font-medium mb-8">Sebelum mulai, lengkapi data berikut.</h2>
+    <form id="candidate-form" class="space-y-5 card p-8" onsubmit="return startQuiz(event)">
+      <div>
+        <label class="text-sm font-medium block mb-1.5">Nama lengkap</label>
+        <input required id="f-name" type="text" class="w-full border border-[var(--line)] rounded-sm px-3 py-2.5 text-sm" placeholder="Contoh: Siti Rahmawati">
+      </div>
+      <div>
+        <label class="text-sm font-medium block mb-1.5">Email</label>
+        <input required id="f-email" type="email" class="w-full border border-[var(--line)] rounded-sm px-3 py-2.5 text-sm" placeholder="nama@email.com">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm font-medium block mb-1.5">Posisi dilamar</label>
+          <input required id="f-position" type="text" class="w-full border border-[var(--line)] rounded-sm px-3 py-2.5 text-sm" placeholder="Team Leader">
+        </div>
+        <div>
+          <label class="text-sm font-medium block mb-1.5">Lama pengalaman kerja</label>
+          <select required id="f-experience" class="w-full border border-[var(--line)] rounded-sm px-3 py-2.5 text-sm bg-white">
+            <option value="">Pilih</option>
+            <option>&lt; 1 tahun</option>
+            <option>1–3 tahun</option>
+            <option>3–7 tahun</option>
+            <option>&gt; 7 tahun</option>
+          </select>
+        </div>
+      </div>
+      <p class="text-xs text-black/50 pt-2 leading-relaxed">
+        Tidak ada jawaban benar atau salah. Pilih opsi yang paling mencerminkan kecenderungan alami Anda
+        dalam mengelola tim, bukan yang Anda anggap "ideal".
+      </p>
+      <div class="flex gap-3 pt-2">
+        <button type="button" onclick="goTo('screen-home')" class="btn-ghost px-5 py-2.5 rounded-sm text-sm font-medium">Kembali</button>
+        <button type="submit" class="btn-primary px-6 py-2.5 rounded-sm text-sm font-medium flex-1">Mulai Tes →</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- ============ QUIZ ============ -->
+<section id="screen-quiz" class="screen min-h-screen px-6 py-10">
+  <div class="max-w-2xl mx-auto">
+    <div class="flex items-center justify-between mb-2">
+      <span class="eyebrow text-black/40" id="quiz-progress-label">SOAL 1 / 20</span>
+      <span class="eyebrow text-black/40" id="quiz-candidate-name"></span>
+    </div>
+    <div class="progress-track h-1.5 rounded-full overflow-hidden mb-10">
+      <div class="progress-fill h-full" id="quiz-progress-fill" style="width:0%"></div>
+    </div>
+
+    <div id="quiz-question-wrap" class="fade-in">
+      <h3 class="font-display text-2xl md:text-3xl font-medium leading-snug mb-8" id="quiz-question-text"></h3>
+      <div class="space-y-3" id="quiz-options"></div>
+    </div>
+
+    <div class="flex justify-between mt-10">
+      <button onclick="prevQuestion()" id="btn-prev" class="btn-ghost px-5 py-2.5 rounded-sm text-sm font-medium">← Sebelumnya</button>
+      <button onclick="nextQuestion()" id="btn-next" disabled class="btn-primary px-6 py-2.5 rounded-sm text-sm font-medium">Selanjutnya →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ THANK YOU ============ -->
+<section id="screen-thankyou" class="screen min-h-screen flex items-center justify-center px-6">
+  <div class="max-w-md w-full text-center fade-in">
+    <div class="w-14 h-14 rounded-full bg-[var(--ink)] text-[var(--paper)] flex items-center justify-center mx-auto mb-8 font-display text-2xl">✓</div>
+    <p class="eyebrow text-[var(--task)] mb-3">TES SELESAI</p>
+    <h2 class="font-display text-3xl font-medium mb-4">Terima kasih, jawaban Anda telah tersimpan.</h2>
+    <p class="text-black/60 text-sm leading-relaxed mb-10">
+      Hasil tes Anda sedang ditinjau oleh tim rekrutmen. Kami akan menghubungi Anda melalui email
+      untuk informasi tahapan selanjutnya. Anda dapat menutup halaman ini.
+    </p>
+    <button onclick="goTo('screen-home')" class="btn-ghost px-6 py-2.5 rounded-sm text-sm font-medium">Kembali ke beranda</button>
+  </div>
+</section>
+
+<!-- ============ RECRUITER LOGIN ============ -->
+<section id="screen-recruiter-login" class="screen min-h-screen flex items-center justify-center px-6">
+  <div class="max-w-sm w-full fade-in">
+    <p class="eyebrow text-[var(--task)] mb-3">AKSES TERBATAS</p>
+    <h2 class="font-display text-3xl font-medium mb-8">Masuk sebagai rekruter</h2>
+    <form class="card p-8 space-y-5" onsubmit="return recruiterLogin(event)">
+      <div>
+        <label class="text-sm font-medium block mb-1.5">Email rekruter</label>
+        <input required id="f-recruiter-email" type="email" class="w-full border border-[var(--line)] rounded-sm px-3 py-2.5 text-sm" placeholder="rekruter@perusahaan.com">
+      </div>
+      <div>
+        <label class="text-sm font-medium block mb-1.5">Password</label>
+        <input required id="f-recruiter-password" type="password" class="w-full border border-[var(--line)] rounded-sm px-3 py-2.5 text-sm">
+        <p id="pin-error" class="text-xs text-red-600 mt-2 hidden">Email atau password salah.</p>
+      </div>
+      <div class="flex gap-3">
+        <button type="button" onclick="goTo('screen-home')" class="btn-ghost px-5 py-2.5 rounded-sm text-sm font-medium">Kembali</button>
+        <button type="submit" class="btn-primary px-6 py-2.5 rounded-sm text-sm font-medium flex-1">Masuk</button>
+      </div>
+    </form>
+    <p class="text-xs text-black/40 mt-4 leading-relaxed">Akun rekruter dibuat lewat dashboard Supabase (Authentication → Users), bukan didaftarkan sendiri di halaman ini.</p>
+  </div>
+</section>
+
+<!-- ============ DASHBOARD ============ -->
+<section id="screen-dashboard" class="screen min-h-screen px-6 py-10">
+  <div class="max-w-6xl mx-auto">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-10">
+      <div>
+        <p class="eyebrow text-[var(--task)] mb-2">DASHBOARD REKRUTER</p>
+        <h2 class="font-display text-3xl font-medium">Hasil Diagnostik Kandidat</h2>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="exportCSV()" class="btn-ghost px-4 py-2 rounded-sm text-sm font-medium">Export CSV</button>
+        <button onclick="confirmClearData()" class="btn-ghost px-4 py-2 rounded-sm text-sm font-medium border-red-300 text-red-600 hover:bg-red-600 hover:border-red-600">Hapus Semua Data</button>
+        <button onclick="logout()" class="btn-ghost px-4 py-2 rounded-sm text-sm font-medium">Keluar</button>
+      </div>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6 mb-10">
+      <div class="card p-6 md:col-span-1">
+        <p class="eyebrow text-black/40 mb-4">PETA KUADRAN (TO × RO)</p>
+        <svg id="quadrant-map" viewBox="0 0 260 260" class="w-full h-auto"></svg>
+        <div class="flex items-center gap-4 mt-4 text-xs">
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:var(--relate)"></span>Efektif</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:var(--amber)"></span>Kurang efektif</span>
+        </div>
+      </div>
+      <div class="card p-6 md:col-span-2 flex flex-col justify-center">
+        <p class="eyebrow text-black/40 mb-4">RINGKASAN</p>
+        <div class="grid grid-cols-3 gap-6">
+          <div>
+            <p class="font-display text-4xl" id="stat-total">0</p>
+            <p class="text-xs text-black/50 mt-1">Total kandidat</p>
+          </div>
+          <div>
+            <p class="font-display text-4xl" id="stat-effective">0</p>
+            <p class="text-xs text-black/50 mt-1">Gaya efektif</p>
+          </div>
+          <div>
+            <p class="font-display text-4xl" id="stat-top">—</p>
+            <p class="text-xs text-black/50 mt-1">Arketipe terbanyak</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 mb-4">
+      <input id="search-input" type="text" placeholder="Cari nama / posisi / arketipe..." class="border border-[var(--line)] rounded-sm px-3 py-2 text-sm w-72" oninput="renderTable()">
+      <select id="filter-archetype" class="border border-[var(--line)] rounded-sm px-3 py-2 text-sm bg-white" onchange="renderTable()">
+        <option value="">Semua arketipe</option>
+      </select>
+    </div>
+
+    <div class="card overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-[var(--line)] text-left text-black/50">
+            <th class="eyebrow font-normal px-4 py-3">Kandidat</th>
+            <th class="eyebrow font-normal px-4 py-3">Posisi</th>
+            <th class="eyebrow font-normal px-4 py-3">Tanggal</th>
+            <th class="eyebrow font-normal px-4 py-3">TO</th>
+            <th class="eyebrow font-normal px-4 py-3">RO</th>
+            <th class="eyebrow font-normal px-4 py-3">E</th>
+            <th class="eyebrow font-normal px-4 py-3">Arketipe</th>
+            <th class="eyebrow font-normal px-4 py-3">Status</th>
+          </tr>
+        </thead>
+        <tbody id="dashboard-tbody"></tbody>
+      </table>
+      <p id="empty-state" class="text-center text-black/40 text-sm py-16 hidden">Belum ada kandidat yang menyelesaikan tes.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DETAIL MODAL ============ -->
+<div id="detail-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center px-6 z-50">
+  <div class="card max-w-2xl w-full max-h-[85vh] overflow-y-auto p-8 fade-in">
+    <div class="flex justify-between items-start mb-6">
+      <div>
+        <p class="eyebrow text-black/40 mb-1" id="modal-position"></p>
+        <h3 class="font-display text-2xl font-medium" id="modal-name"></h3>
+      </div>
+      <button onclick="closeModal()" class="text-2xl leading-none text-black/40 hover:text-black">×</button>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4 mb-6">
+      <div class="bg-[var(--paper-2)] rounded-sm p-4 text-center">
+        <p class="font-mono text-xs text-black/50 mb-1">TASK (TO)</p>
+        <p class="font-display text-2xl" id="modal-to"></p>
+      </div>
+      <div class="bg-[var(--paper-2)] rounded-sm p-4 text-center">
+        <p class="font-mono text-xs text-black/50 mb-1">RELATION (RO)</p>
+        <p class="font-display text-2xl" id="modal-ro"></p>
+      </div>
+      <div class="bg-[var(--paper-2)] rounded-sm p-4 text-center">
+        <p class="font-mono text-xs text-black/50 mb-1">EFEKTIVITAS (E)</p>
+        <p class="font-display text-2xl" id="modal-e"></p>
+      </div>
+    </div>
+
+    <div class="mb-6">
+      <span id="modal-badge" class="inline-block text-xs font-medium px-3 py-1 rounded-full mb-3"></span>
+      <h4 class="font-display text-xl font-medium mb-2" id="modal-archetype"></h4>
+      <p class="text-sm text-black/70 leading-relaxed" id="modal-desc"></p>
+    </div>
+
+    <svg id="modal-quadrant" viewBox="0 0 260 260" class="w-full max-w-xs mx-auto h-auto"></svg>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   MSDT — Reddin 3-D Management Style scoring engine
+   TO = Task Orientation, RO = Relationship Orientation, E = Effectiveness
+   ========================================================= */
+
+// --- Konfigurasi Supabase ---
+// anon key ini AMAN untuk ditaruh di frontend — akses sesungguhnya diatur oleh
+// Row Level Security (RLS) policy di database, bukan dengan menyembunyikan key ini.
+const SUPABASE_URL = "https://trtxyuzdflbleaoezvqp.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRydHh5dXpkZmxibGVhb2V6dnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1MzM3NjIsImV4cCI6MjEwMDEwOTc2Mn0.Wr8NylkTu_nVKxpK_1ZdSWmsc8QSRPTHsSLjw8_Q9co";
+
+let supabaseClient = null;
+const supabaseReady = (async () => {
+  const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+  supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+})();
+
+// 12 pasangan pernyataan mengukur TO vs RO
+const TO_RO_ITEMS = [
+  { a: "Saya menetapkan target kerja yang jelas dan menuntut pencapaiannya tepat waktu.", b: "Saya lebih dulu memastikan hubungan dan kepercayaan tim tetap terjaga." },
+  { a: "Saat muncul masalah, saya langsung fokus mencari solusi teknis dan prosedural.", b: "Saat muncul masalah, saya lebih dulu menenangkan dan mendengarkan tim." },
+  { a: "Saya memberi instruksi kerja yang rinci dan terstruktur langkah demi langkah.", b: "Saya memberi ruang otonomi dan banyak mendengarkan masukan anggota tim." },
+  { a: "Saya menilai keberhasilan tim terutama dari pencapaian target dan output.", b: "Saya menilai keberhasilan tim terutama dari keharmonisan dan keterlibatan mereka." },
+  { a: "Saya cenderung langsung menegur ketika ada anggota tim yang kinerjanya menurun.", b: "Saya cenderung mengajak bicara personal ketika ada anggota tim yang kinerjanya menurun." },
+  { a: "Rapat tim saya fokus pada progres, angka, dan tenggat waktu.", b: "Rapat tim saya fokus pada dinamika, ide, dan hubungan antar anggota." },
+  { a: "Saya lebih nyaman bekerja dengan SOP dan target yang terukur.", b: "Saya lebih nyaman bekerja dengan membangun kedekatan dan rasa saling percaya." },
+  { a: "Saat mendelegasikan tugas, saya menjelaskan hasil akhir yang harus dicapai secara spesifik.", b: "Saat mendelegasikan tugas, saya menanyakan dulu kenyamanan dan kesiapan orang tersebut." },
+  { a: "Saya mengevaluasi tim terutama lewat pencapaian KPI.", b: "Saya mengevaluasi tim terutama lewat kualitas kerja sama dan komunikasi." },
+  { a: "Saya lebih memilih mempercepat proses meski ada pihak yang kurang nyaman.", b: "Saya lebih memilih memperlambat proses demi menjaga kenyamanan semua pihak." },
+  { a: "Bagi saya, disiplin terhadap target adalah prioritas utama seorang pemimpin.", b: "Bagi saya, kepedulian terhadap orang adalah prioritas utama seorang pemimpin." },
+  { a: "Saya cenderung mengambil alih ketika pekerjaan tim berjalan lambat.", b: "Saya cenderung memberi semangat dan dukungan ketika pekerjaan tim berjalan lambat." },
+];
+
+// 8 pasangan pernyataan mengukur Efektivitas (adaptasi situasional vs kekakuan)
+const EFFECT_ITEMS = [
+  { a: "Saya menyesuaikan gaya kepemimpinan saya sesuai kebutuhan situasi dan orang yang berbeda.", b: "Saya menerapkan pendekatan yang sama pada semua situasi, apa pun konteksnya." },
+  { a: "Saya rutin mengevaluasi apakah cara kerja saya masih efektif dan mau mengubahnya bila perlu.", b: "Saya jarang mengubah kebiasaan kerja saya meskipun hasilnya kurang optimal." },
+  { a: "Saya terbuka menerima kritik terhadap gaya kepemimpinan saya dari tim.", b: "Saya cenderung defensif ketika gaya kepemimpinan saya dipertanyakan." },
+  { a: "Saya mempertimbangkan kesiapan dan kematangan anggota tim sebelum menentukan cara mengarahkan mereka.", b: "Saya memperlakukan semua anggota tim dengan cara yang persis sama tanpa membedakan situasinya." },
+  { a: "Keputusan saya biasanya menghasilkan tindak lanjut yang jelas dan nyata.", b: "Keputusan saya sering berhenti di diskusi tanpa tindak lanjut yang jelas." },
+  { a: "Saya berani mengambil keputusan sulit meski tidak semua pihak setuju.", b: "Saya sering menunda keputusan sulit demi menghindari ketidaknyamanan." },
+  { a: "Tim saya umumnya tahu persis apa yang saya harapkan dari mereka.", b: "Tim saya sering kebingungan tentang apa sebenarnya yang saya harapkan." },
+  { a: "Saya mendorong pertumbuhan tim tanpa mengorbankan pencapaian target organisasi.", b: "Saya cenderung mengorbankan salah satu antara pertumbuhan tim atau target organisasi." },
+];
+
+function buildQuestionBank(){
+  const bank = [];
+  TO_RO_ITEMS.forEach((it, i) => bank.push({
+    id: "tr" + i,
+    text: `Dalam situasi kerja sehari-hari, mana yang lebih menggambarkan Anda?`,
+    optA: { text: it.a, dim: "TO" },
+    optB: { text: it.b, dim: "RO" },
+  }));
+  EFFECT_ITEMS.forEach((it, i) => bank.push({
+    id: "e" + i,
+    text: `Mana yang lebih menggambarkan cara Anda memimpin?`,
+    optA: { text: it.a, dim: "E", val: 1 },
+    optB: { text: it.b, dim: "E", val: 0 },
+  }));
+  return shuffle(bank);
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const ARCHETYPES = {
+  Executive: {
+    label: "Executive",
+    badge: "Efektif",
+    desc: "Menunjukkan orientasi tinggi pada tugas sekaligus hubungan, dan menerapkannya secara efektif. Pemimpin tipe ini fokus pada pencapaian target sekaligus membangun tim yang solid — mampu menetapkan standar tinggi tanpa mengorbankan motivasi dan keterlibatan anggota tim."
+  },
+  Developer: {
+    label: "Developer",
+    badge: "Efektif",
+    desc: "Orientasi hubungan tinggi, orientasi tugas rendah, namun tetap efektif. Pemimpin tipe ini unggul dalam memberdayakan dan mengembangkan potensi tim, mempercayakan tanggung jawab, dan menumbuhkan otonomi — cocok untuk konteks yang membutuhkan pengembangan jangka panjang."
+  },
+  "Benevolent Autocrat": {
+    label: "Benevolent Autocrat",
+    badge: "Efektif",
+    desc: "Orientasi tugas tinggi, orientasi hubungan rendah, namun tetap efektif. Pemimpin tipe ini direktif dan tegas dalam menetapkan ekspektasi, namun tetap mampu memperoleh hasil dan kepatuhan tim tanpa menimbulkan resistensi berarti."
+  },
+  Bureaucrat: {
+    label: "Bureaucrat",
+    badge: "Efektif",
+    desc: "Orientasi tugas dan hubungan sama-sama rendah, namun tetap efektif. Pemimpin tipe ini menjaga konsistensi terhadap aturan dan prosedur, cocok untuk peran yang menuntut kepatuhan, stabilitas, dan minimnya penyimpangan proses."
+  },
+  Compromiser: {
+    label: "Compromiser",
+    badge: "Kurang Efektif",
+    desc: "Orientasi tugas dan hubungan sama-sama tinggi, tetapi kurang efektif dalam penerapannya. Pemimpin tipe ini berusaha menyenangkan semua pihak sehingga sering kesulitan mengambil keputusan sulit dan cenderung terombang-ambing di bawah tekanan."
+  },
+  Missionary: {
+    label: "Missionary",
+    badge: "Kurang Efektif",
+    desc: "Orientasi hubungan tinggi, orientasi tugas rendah, dan kurang efektif. Pemimpin tipe ini sangat mengutamakan keharmonisan tim di atas kinerja, sehingga standar dan akuntabilitas sering terabaikan demi menjaga suasana yang nyaman."
+  },
+  Autocrat: {
+    label: "Autocrat",
+    badge: "Kurang Efektif",
+    desc: "Orientasi tugas tinggi, orientasi hubungan rendah, dan kurang efektif. Pemimpin tipe ini bersikap otoriter dan mendikte, cenderung mengabaikan kebutuhan tim sehingga berisiko menimbulkan keterasingan dan turnover yang tinggi."
+  },
+  Deserter: {
+    label: "Deserter",
+    badge: "Kurang Efektif",
+    desc: "Orientasi tugas dan hubungan sama-sama rendah, dan kurang efektif. Pemimpin tipe ini cenderung pasif, menarik diri, dan menghindari tanggung jawab kepemimpinan — minim inisiatif baik terhadap hasil kerja maupun terhadap tim."
+  },
+};
+
+function classify(to, ro, e, toMax, roMax, eMax){
+  const highTO = to >= toMax / 2;
+  const highRO = ro >= roMax / 2;
+  const effective = e >= eMax / 2;
+
+  if (highTO && highRO)  return effective ? "Executive" : "Compromiser";
+  if (!highTO && highRO) return effective ? "Developer" : "Missionary";
+  if (highTO && !highRO) return effective ? "Benevolent Autocrat" : "Autocrat";
+  return effective ? "Bureaucrat" : "Deserter";
+}
+
+/* =========================== STATE =========================== */
+let questionBank = [];
+let currentIndex = 0;
+let answers = {}; // questionId -> 'A' | 'B'
+let candidateDraft = {};
+let candidatesCache = [];
+
+/* =========================== NAV =========================== */
+function goTo(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo({top:0, behavior:"instant"});
+}
+
+/* =========================== CANDIDATE FLOW =========================== */
+function startQuiz(ev){
+  ev.preventDefault();
+  candidateDraft = {
+    name: document.getElementById("f-name").value.trim(),
+    email: document.getElementById("f-email").value.trim(),
+    position: document.getElementById("f-position").value.trim(),
+    experience: document.getElementById("f-experience").value,
+  };
+  questionBank = buildQuestionBank();
+  currentIndex = 0;
+  answers = {};
+  document.getElementById("quiz-candidate-name").textContent = candidateDraft.name;
+  goTo("screen-quiz");
+  renderQuestion();
+  return false;
+}
+
+function renderQuestion(){
+  const q = questionBank[currentIndex];
+  document.getElementById("quiz-progress-label").textContent =
+    `SOAL ${currentIndex + 1} / ${questionBank.length}`;
+  document.getElementById("quiz-progress-fill").style.width =
+    `${((currentIndex) / questionBank.length) * 100}%`;
+  document.getElementById("quiz-question-text").textContent = q.text;
+
+  const wrap = document.getElementById("quiz-options");
+  wrap.innerHTML = "";
+  ["A", "B"].forEach(letter => {
+    const opt = letter === "A" ? q.optA : q.optB;
+    const selected = answers[q.id] === letter;
+    const div = document.createElement("div");
+    div.className = "option-card rounded-sm p-4 flex gap-4 items-start" + (selected ? " selected" : "");
+    div.onclick = () => selectOption(letter);
+    div.innerHTML = `
+      <span class="opt-letter w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-xs font-medium">${letter}</span>
+      <span class="text-sm leading-relaxed pt-1">${opt.text}</span>
+    `;
+    wrap.appendChild(div);
+  });
+
+  document.getElementById("btn-prev").style.visibility = currentIndex === 0 ? "hidden" : "visible";
+  document.getElementById("btn-next").disabled = !answers[q.id];
+  document.getElementById("btn-next").textContent =
+    currentIndex === questionBank.length - 1 ? "Submit →" : "Selanjutnya →";
+}
+
+function selectOption(letter){
+  const q = questionBank[currentIndex];
+  answers[q.id] = letter;
+  renderQuestion();
+}
+
+function nextQuestion(){
+  if (currentIndex < questionBank.length - 1){
+    currentIndex++;
+    renderQuestion();
+  } else {
+    submitCandidate();
+  }
+}
+function prevQuestion(){
+  if (currentIndex > 0){
+    currentIndex--;
+    renderQuestion();
+  }
+}
+
+async function submitCandidate(){
+  let to = 0, ro = 0, e = 0;
+  const toMax = TO_RO_ITEMS.length;
+  const roMax = TO_RO_ITEMS.length;
+  const eMax = EFFECT_ITEMS.length;
+
+  questionBank.forEach(q => {
+    const chosen = answers[q.id] === "A" ? q.optA : q.optB;
+    if (chosen.dim === "TO") to++;
+    if (chosen.dim === "RO") ro++;
+    if (chosen.dim === "E") e += chosen.val;
+  });
+
+  const archetypeKey = classify(to, ro, e, toMax, roMax, eMax);
+
+  const btn = document.getElementById("btn-next");
+  btn.disabled = true;
+  btn.textContent = "Mengirim...";
+
+  try {
+    await supabaseReady;
+    const { error } = await supabaseClient.from("candidates").insert({
+      name: candidateDraft.name,
+      email: candidateDraft.email,
+      position: candidateDraft.position,
+      experience: candidateDraft.experience,
+      to_score: to, ro_score: ro, e_score: e,
+      to_max: toMax, ro_max: roMax, e_max: eMax,
+      archetype: archetypeKey,
+    });
+    if (error) throw error;
+    goTo("screen-thankyou");
+  } catch (err) {
+    console.error(err);
+    alert("Terjadi kendala saat mengirim jawaban. Periksa koneksi Anda dan coba lagi.");
+    btn.disabled = false;
+    btn.textContent = "Submit →";
+  }
+}
+
+/* =========================== RECRUITER FLOW =========================== */
+async function recruiterLogin(ev){
+  ev.preventDefault();
+  const email = document.getElementById("f-recruiter-email").value.trim();
+  const password = document.getElementById("f-recruiter-password").value;
+  const errEl = document.getElementById("pin-error");
+  errEl.classList.add("hidden");
+  try {
+    await supabaseReady;
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    document.getElementById("f-recruiter-password").value = "";
+    goTo("screen-dashboard");
+    await loadDashboard();
+  } catch (err) {
+    errEl.textContent = "Email atau password salah.";
+    errEl.classList.remove("hidden");
+  }
+  return false;
+}
+
+async function loadDashboard(){
+  try {
+    await supabaseReady;
+    const { data, error } = await supabaseClient
+      .from("candidates")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    candidatesCache = data.map(r => ({
+      id: r.id,
+      name: r.name,
+      email: r.email,
+      position: r.position,
+      experience: r.experience,
+      date: r.created_at,
+      scores: { to: r.to_score, ro: r.ro_score, e: r.e_score, toMax: r.to_max, roMax: r.ro_max, eMax: r.e_max },
+      archetype: r.archetype,
+    }));
+  } catch (err) {
+    console.error(err);
+    alert("Tidak dapat memuat data. Pastikan Anda sudah login dan RLS policy sudah dikonfigurasi.");
+    candidatesCache = [];
+  }
+  renderDashboard();
+}
+
+function renderDashboard(){
+  const list = candidatesCache;
+  document.getElementById("stat-total").textContent = list.length;
+  document.getElementById("stat-effective").textContent =
+    list.filter(c => ARCHETYPES[c.archetype].badge === "Efektif").length;
+
+  const counts = {};
+  list.forEach(c => counts[c.archetype] = (counts[c.archetype] || 0) + 1);
+  const top = Object.entries(counts).sort((a,b) => b[1]-a[1])[0];
+  document.getElementById("stat-top").textContent = top ? top[0] : "—";
+
+  const filterSel = document.getElementById("filter-archetype");
+  filterSel.innerHTML = '<option value="">Semua arketipe</option>' +
+    Object.keys(ARCHETYPES).map(k => `<option value="${k}">${k}</option>`).join("");
+
+  drawQuadrantMap("quadrant-map", list, null);
+  renderTable();
+}
+
+function renderTable(){
+  const list = candidatesCache;
+  const q = document.getElementById("search-input").value.toLowerCase();
+  const fArch = document.getElementById("filter-archetype").value;
+
+  const filtered = list.filter(c => {
+    const matchesText = !q || c.name.toLowerCase().includes(q) || c.position.toLowerCase().includes(q) || c.archetype.toLowerCase().includes(q);
+    const matchesArch = !fArch || c.archetype === fArch;
+    return matchesText && matchesArch;
+  }).sort((a,b) => new Date(b.date) - new Date(a.date));
+
+  const tbody = document.getElementById("dashboard-tbody");
+  tbody.innerHTML = "";
+  document.getElementById("empty-state").classList.toggle("hidden", filtered.length !== 0);
+
+  filtered.forEach(c => {
+    const arch = ARCHETYPES[c.archetype];
+    const tr = document.createElement("tr");
+    tr.className = "row-hover border-b border-[var(--line)] last:border-0";
+    tr.onclick = () => openModal(c.id);
+    tr.innerHTML = `
+      <td class="px-4 py-3 font-medium">${escapeHTML(c.name)}<div class="text-xs text-black/40 font-normal">${escapeHTML(c.email)}</div></td>
+      <td class="px-4 py-3 text-black/70">${escapeHTML(c.position)}</td>
+      <td class="px-4 py-3 text-black/50 text-xs font-mono">${formatDate(c.date)}</td>
+      <td class="px-4 py-3 font-mono">${c.scores.to}/${c.scores.toMax}</td>
+      <td class="px-4 py-3 font-mono">${c.scores.ro}/${c.scores.roMax}</td>
+      <td class="px-4 py-3 font-mono">${c.scores.e}/${c.scores.eMax}</td>
+      <td class="px-4 py-3 font-medium">${arch.label}</td>
+      <td class="px-4 py-3"><span class="text-xs px-2 py-1 rounded-full ${arch.badge === "Efektif" ? "badge-eff" : "badge-ineff"}">${arch.badge}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function openModal(id){
+  const c = candidatesCache.find(x => x.id === id);
+  if (!c) return;
+  const arch = ARCHETYPES[c.archetype];
+  document.getElementById("modal-name").textContent = c.name;
+  document.getElementById("modal-position").textContent = `${c.position} · ${formatDate(c.date)}`;
+  document.getElementById("modal-to").textContent = `${c.scores.to}/${c.scores.toMax}`;
+  document.getElementById("modal-ro").textContent = `${c.scores.ro}/${c.scores.roMax}`;
+  document.getElementById("modal-e").textContent = `${c.scores.e}/${c.scores.eMax}`;
+  document.getElementById("modal-archetype").textContent = arch.label;
+  document.getElementById("modal-desc").textContent = arch.desc;
+  const badge = document.getElementById("modal-badge");
+  badge.textContent = arch.badge;
+  badge.className = "inline-block text-xs font-medium px-3 py-1 rounded-full mb-3 " + (arch.badge === "Efektif" ? "badge-eff" : "badge-ineff");
+
+  drawQuadrantMap("modal-quadrant", candidatesCache, c.id);
+
+  document.getElementById("detail-modal").classList.remove("hidden");
+  document.getElementById("detail-modal").classList.add("flex");
+}
+function closeModal(){
+  document.getElementById("detail-modal").classList.add("hidden");
+  document.getElementById("detail-modal").classList.remove("flex");
+}
+
+async function confirmClearData(){
+  if (!confirm("Hapus seluruh data kandidat secara permanen dari database? Tindakan ini tidak dapat dibatalkan.")) return;
+  try {
+    await supabaseReady;
+    const { error } = await supabaseClient.from("candidates").delete().not("id", "is", null);
+    if (error) throw error;
+    await loadDashboard();
+  } catch (err) {
+    console.error(err);
+    alert("Gagal menghapus data di database.");
+  }
+}
+
+function exportCSV(){
+  const list = candidatesCache;
+  if (list.length === 0){ alert("Belum ada data untuk diekspor."); return; }
+  const header = ["Nama","Email","Posisi","Pengalaman","Tanggal","TO","RO","E","Arketipe","Status"];
+  const rows = list.map(c => [
+    c.name, c.email, c.position, c.experience, formatDate(c.date),
+    `${c.scores.to}/${c.scores.toMax}`, `${c.scores.ro}/${c.scores.roMax}`, `${c.scores.e}/${c.scores.eMax}`,
+    c.archetype, ARCHETYPES[c.archetype].badge
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `msdt_hasil_kandidat_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* =========================== QUADRANT SVG =========================== */
+function drawQuadrantMap(svgId, list, highlightId){
+  const svg = document.getElementById(svgId);
+  const pad = 30, size = 260, plotSize = size - pad * 2;
+  const ink = "#14192B", line = "#D8D9CF", relate = "#2E8B78", amber = "#D98E04";
+
+  let html = "";
+  // axes
+  html += `<line x1="${pad}" y1="${pad}" x2="${pad}" y2="${size-pad}" stroke="${line}" stroke-width="1.5"/>`;
+  html += `<line x1="${pad}" y1="${size-pad}" x2="${size-pad}" y2="${size-pad}" stroke="${line}" stroke-width="1.5"/>`;
+  html += `<line x1="${size/2}" y1="${pad}" x2="${size/2}" y2="${size-pad}" stroke="${line}" stroke-width="1" stroke-dasharray="3,3"/>`;
+  html += `<line x1="${pad}" y1="${size/2}" x2="${size-pad}" y2="${size/2}" stroke="${line}" stroke-width="1" stroke-dasharray="3,3"/>`;
+  // quadrant labels
+  html += `<text x="${pad+6}" y="${pad+14}" font-size="8" font-family="IBM Plex Mono" fill="#999">Dev/Miss</text>`;
+  html += `<text x="${size-pad-52}" y="${pad+14}" font-size="8" font-family="IBM Plex Mono" fill="#999">Exec/Comp</text>`;
+  html += `<text x="${pad+6}" y="${size-pad-6}" font-size="8" font-family="IBM Plex Mono" fill="#999">Bur/Des</text>`;
+  html += `<text x="${size-pad-46}" y="${size-pad-6}" font-size="8" font-family="IBM Plex Mono" fill="#999">BA/Auto</text>`;
+  // axis labels
+  html += `<text x="${size/2-16}" y="${size-8}" font-size="9" font-family="IBM Plex Mono" fill="${ink}">TASK →</text>`;
+  html += `<text x="4" y="${size/2}" font-size="9" font-family="IBM Plex Mono" fill="${ink}" transform="rotate(-90 10 ${size/2})">RELATION →</text>`;
+
+  list.forEach(c => {
+    const x = pad + (c.scores.to / c.scores.toMax) * plotSize;
+    const y = (size - pad) - (c.scores.ro / c.scores.roMax) * plotSize;
+    const eff = ARCHETYPES[c.archetype].badge === "Efektif";
+    const isHi = c.id === highlightId;
+    const r = isHi ? 6 : 3.5;
+    const fill = eff ? relate : amber;
+    html += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}" fill="${fill}" fill-opacity="${isHi ? 1 : 0.55}" stroke="${isHi ? ink : 'none'}" stroke-width="${isHi ? 1.5 : 0}"/>`;
+  });
+
+  svg.innerHTML = html;
+}
+
+/* =========================== UTIL =========================== */
+async function logout(){
+  await supabaseReady;
+  await supabaseClient.auth.signOut();
+  candidatesCache = [];
+  goTo("screen-home");
+}
+
+function formatDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString("id-ID", { day:"2-digit", month:"short", year:"numeric" });
+}
+function escapeHTML(str){
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+document.getElementById("detail-modal").addEventListener("click", (e) => {
+  if (e.target.id === "detail-modal") closeModal();
+});
+</script>
+</body>
+</html>
