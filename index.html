@@ -316,19 +316,30 @@
 <script>
 /* =========================================================
    MSDT — Reddin 3-D Management Style scoring engine
-   TO = Task Orientation, RO = Relationship Orientation, E = Effectiveness
    ========================================================= */
 
+// --- NAVIGASI WAJIB DI ATAS AGAR LANGSUNG SIAP ---
+function goTo(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  const target = document.getElementById(id);
+  if(target){
+    target.classList.add("active");
+    window.scrollTo({top:0, behavior:"instant"});
+  }
+}
+
 // --- Konfigurasi Supabase ---
-// anon key ini AMAN untuk ditaruh di frontend — akses sesungguhnya diatur oleh
-// Row Level Security (RLS) policy di database, bukan dengan menyembunyikan key ini.
 const SUPABASE_URL = "https://trtxyuzdflbleaoezvqp.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRydHh5dXpkZmxibGVhb2V6dnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1MzM3NjIsImV4cCI6MjEwMDEwOTc2Mn0.Wr8NylkTu_nVKxpK_1ZdSWmsc8QSRPTHsSLjw8_Q9co";
 
 let supabaseClient = null;
 const supabaseReady = (async () => {
-  const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
-  supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  try {
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+    supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } catch(e) {
+    console.error("Gagal memuat modul Supabase:", e);
+  }
 })();
 
 // 12 pasangan pernyataan mengukur TO vs RO
@@ -442,16 +453,9 @@ function classify(to, ro, e, toMax, roMax, eMax){
 /* =========================== STATE =========================== */
 let questionBank = [];
 let currentIndex = 0;
-let answers = {}; // questionId -> 'A' | 'B'
+let answers = {}; 
 let candidateDraft = {};
 let candidatesCache = [];
-
-/* =========================== NAV =========================== */
-function goTo(id){
-  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-  window.scrollTo({top:0, behavior:"instant"});
-}
 
 /* =========================== CANDIDATE FLOW =========================== */
 function startQuiz(ev){
@@ -542,6 +546,7 @@ async function submitCandidate(){
 
   try {
     await supabaseReady;
+    if (!supabaseClient) throw new Error("Supabase belum terinisialisasi.");
     const { error } = await supabaseClient.from("candidates").insert({
       name: candidateDraft.name,
       email: candidateDraft.email,
@@ -555,7 +560,7 @@ async function submitCandidate(){
     goTo("screen-thankyou");
   } catch (err) {
     console.error(err);
-    alert("Terjadi kendala saat mengirim jawaban. Periksa koneksi Anda dan coba lagi.");
+    alert("Terjadi kendala saat mengirim jawaban. Periksa koneksi Anda dan pastikan tabel database sudah siap.");
     btn.disabled = false;
     btn.textContent = "Submit →";
   }
@@ -570,6 +575,7 @@ async function recruiterLogin(ev){
   errEl.classList.add("hidden");
   try {
     await supabaseReady;
+    if (!supabaseClient) throw new Error("Supabase belum terinisialisasi.");
     const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
     if (error) throw error;
     document.getElementById("f-recruiter-password").value = "";
@@ -585,6 +591,7 @@ async function recruiterLogin(ev){
 async function loadDashboard(){
   try {
     await supabaseReady;
+    if (!supabaseClient) return;
     const { data, error } = await supabaseClient
       .from("candidates")
       .select("*")
@@ -602,7 +609,6 @@ async function loadDashboard(){
     }));
   } catch (err) {
     console.error(err);
-    alert("Tidak dapat memuat data. Pastikan Anda sudah login dan RLS policy sudah dikonfigurasi.");
     candidatesCache = [];
   }
   renderDashboard();
@@ -725,17 +731,14 @@ function drawQuadrantMap(svgId, list, highlightId){
   const ink = "#14192B", line = "#D8D9CF", relate = "#2E8B78", amber = "#D98E04";
 
   let html = "";
-  // axes
   html += `<line x1="${pad}" y1="${pad}" x2="${pad}" y2="${size-pad}" stroke="${line}" stroke-width="1.5"/>`;
   html += `<line x1="${pad}" y1="${size-pad}" x2="${size-pad}" y2="${size-pad}" stroke="${line}" stroke-width="1.5"/>`;
   html += `<line x1="${size/2}" y1="${pad}" x2="${size/2}" y2="${size-pad}" stroke="${line}" stroke-width="1" stroke-dasharray="3,3"/>`;
   html += `<line x1="${pad}" y1="${size/2}" x2="${size-pad}" y2="${size/2}" stroke="${line}" stroke-width="1" stroke-dasharray="3,3"/>`;
-  // quadrant labels
   html += `<text x="${pad+6}" y="${pad+14}" font-size="8" font-family="IBM Plex Mono" fill="#999">Dev/Miss</text>`;
   html += `<text x="${size-pad-52}" y="${pad+14}" font-size="8" font-family="IBM Plex Mono" fill="#999">Exec/Comp</text>`;
   html += `<text x="${pad+6}" y="${size-pad-6}" font-size="8" font-family="IBM Plex Mono" fill="#999">Bur/Des</text>`;
   html += `<text x="${size-pad-46}" y="${size-pad-6}" font-size="8" font-family="IBM Plex Mono" fill="#999">BA/Auto</text>`;
-  // axis labels
   html += `<text x="${size/2-16}" y="${size-8}" font-size="9" font-family="IBM Plex Mono" fill="${ink}">TASK →</text>`;
   html += `<text x="4" y="${size/2}" font-size="9" font-family="IBM Plex Mono" fill="${ink}" transform="rotate(-90 10 ${size/2})">RELATION →</text>`;
 
@@ -755,7 +758,7 @@ function drawQuadrantMap(svgId, list, highlightId){
 /* =========================== UTIL =========================== */
 async function logout(){
   await supabaseReady;
-  await supabaseClient.auth.signOut();
+  if(supabaseClient) await supabaseClient.auth.signOut();
   candidatesCache = [];
   goTo("screen-home");
 }
