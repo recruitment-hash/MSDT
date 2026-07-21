@@ -59,10 +59,10 @@
    ========================================================================= */
 
 const CONFIG = {
-  SUPABASE_URL: "https://trtxyuzdzfblleaoezqp.supabase.co",
+  SUPABASE_URL: "https://trtxyuzdflbleaoezvqp.supabase.co",
   SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJydHh5dXpkZmxibGVhb2V6dnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1MzM3NjIsImV4cCI6MjEwMDEwOTc2Mn0.Wr8NylkTu_nVKxpK_1ZdSWmsc8QSRPTHsSLjw8_Q9co",
   TABLE: "msdt_candidates",
-  RECRUITER_PIN: "1234",
+  RECRUITER_PIN: "1817",
 };
 
 const supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
@@ -152,7 +152,6 @@ function renderHome() {
           ${icon("compass", "w-7 h-7")}
         </div>
         <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Management Style Diagnostic Test</h1>
-        <p class="text-slate-500 mt-2">Portal asesmen gaya manajemen berbasis model Task &amp; Relationship Orientation</p>
       </div>
       <div class="grid sm:grid-cols-2 gap-5">
         <button onclick="goCandidateStart()" class="group text-left bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 transition p-6">
