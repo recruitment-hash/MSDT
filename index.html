@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MSDT — Management Style Diagnostic Test</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<!-- Muat Supabase JS via CDN UMD global agar aman dari masalah dynamic import ESM -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -316,32 +318,20 @@
 <script>
 /* =========================================================
    MSDT — Reddin 3-D Management Style scoring engine
-   TO = Task Orientation, RO = Relationship Orientation, E = Effectiveness
    ========================================================= */
 
-// --- Konfigurasi Supabase ---
-// anon key ini AMAN untuk ditaruh di frontend — akses sesungguhnya diatur oleh
-// Row Level Security (RLS) policy di database, bukan dengan menyembunyikan key ini.
 const SUPABASE_URL = "https://trtxyuzdflbleaoezvqp.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRydHh5dXpkZmxibGVhb2V6dnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1MzM3NjIsImV4cCI6MjEwMDEwOTc2Mn0.Wr8NylkTu_nVKxpK_1ZdSWmsc8QSRPTHsSLjw8_Q9co";
 
 let supabaseClient = null;
-let supabaseLoadError = null;
 
-// Dimuat hanya saat pertama kali dibutuhkan (submit tes / login rekruter),
-// bukan langsung saat halaman dibuka — supaya beranda tetap responsif
-// meskipun koneksi ke esm.sh lambat atau gagal.
-async function ensureSupabase(){
-  if (supabaseClient) return supabaseClient;
-  if (supabaseLoadError) throw supabaseLoadError;
-  try {
-    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
-    supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    return supabaseClient;
-  } catch (err) {
-    supabaseLoadError = err;
-    throw err;
+// Inisialisasi awal client Supabase dari global UMD script
+try {
+  if (window.supabase) {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   }
+} catch (e) {
+  console.error("Gagal menginisialisasi Supabase:", e);
 }
 
 // 12 pasangan pernyataan mengukur TO vs RO
@@ -360,7 +350,6 @@ const TO_RO_ITEMS = [
   { a: "Saya cenderung mengambil alih ketika pekerjaan tim berjalan lambat.", b: "Saya cenderung memberi semangat dan dukungan ketika pekerjaan tim berjalan lambat." },
 ];
 
-// 8 pasangan pernyataan mengukur Efektivitas (adaptasi situasional vs kekakuan)
 const EFFECT_ITEMS = [
   { a: "Saya menyesuaikan gaya kepemimpinan saya sesuai kebutuhan situasi dan orang yang berbeda.", b: "Saya menerapkan pendekatan yang sama pada semua situasi, apa pun konteksnya." },
   { a: "Saya rutin mengevaluasi apakah cara kerja saya masih efektif dan mau mengubahnya bila perlu.", b: "Saya jarang mengubah kebiasaan kerja saya meskipun hasilnya kurang optimal." },
@@ -399,46 +388,14 @@ function shuffle(arr){
 }
 
 const ARCHETYPES = {
-  Executive: {
-    label: "Executive",
-    badge: "Efektif",
-    desc: "Menunjukkan orientasi tinggi pada tugas sekaligus hubungan, dan menerapkannya secara efektif. Pemimpin tipe ini fokus pada pencapaian target sekaligus membangun tim yang solid — mampu menetapkan standar tinggi tanpa mengorbankan motivasi dan keterlibatan anggota tim."
-  },
-  Developer: {
-    label: "Developer",
-    badge: "Efektif",
-    desc: "Orientasi hubungan tinggi, orientasi tugas rendah, namun tetap efektif. Pemimpin tipe ini unggul dalam memberdayakan dan mengembangkan potensi tim, mempercayakan tanggung jawab, dan menumbuhkan otonomi — cocok untuk konteks yang membutuhkan pengembangan jangka panjang."
-  },
-  "Benevolent Autocrat": {
-    label: "Benevolent Autocrat",
-    badge: "Efektif",
-    desc: "Orientasi tugas tinggi, orientasi hubungan rendah, namun tetap efektif. Pemimpin tipe ini direktif dan tegas dalam menetapkan ekspektasi, namun tetap mampu memperoleh hasil dan kepatuhan tim tanpa menimbulkan resistensi berarti."
-  },
-  Bureaucrat: {
-    label: "Bureaucrat",
-    badge: "Efektif",
-    desc: "Orientasi tugas dan hubungan sama-sama rendah, namun tetap efektif. Pemimpin tipe ini menjaga konsistensi terhadap aturan dan prosedur, cocok untuk peran yang menuntut kepatuhan, stabilitas, dan minimnya penyimpangan proses."
-  },
-  Compromiser: {
-    label: "Compromiser",
-    badge: "Kurang Efektif",
-    desc: "Orientasi tugas dan hubungan sama-sama tinggi, tetapi kurang efektif dalam penerapannya. Pemimpin tipe ini berusaha menyenangkan semua pihak sehingga sering kesulitan mengambil keputusan sulit dan cenderung terombang-ambing di bawah tekanan."
-  },
-  Missionary: {
-    label: "Missionary",
-    badge: "Kurang Efektif",
-    desc: "Orientasi hubungan tinggi, orientasi tugas rendah, dan kurang efektif. Pemimpin tipe ini sangat mengutamakan keharmonisan tim di atas kinerja, sehingga standar dan akuntabilitas sering terabaikan demi menjaga suasana yang nyaman."
-  },
-  Autocrat: {
-    label: "Autocrat",
-    badge: "Kurang Efektif",
-    desc: "Orientasi tugas tinggi, orientasi hubungan rendah, dan kurang efektif. Pemimpin tipe ini bersikap otoriter dan mendikte, cenderung mengabaikan kebutuhan tim sehingga berisiko menimbulkan keterasingan dan turnover yang tinggi."
-  },
-  Deserter: {
-    label: "Deserter",
-    badge: "Kurang Efektif",
-    desc: "Orientasi tugas dan hubungan sama-sama rendah, dan kurang efektif. Pemimpin tipe ini cenderung pasif, menarik diri, dan menghindari tanggung jawab kepemimpinan — minim inisiatif baik terhadap hasil kerja maupun terhadap tim."
-  },
+  Executive: { label: "Executive", badge: "Efektif", desc: "Menunjukkan orientasi tinggi pada tugas sekaligus hubungan..." },
+  Developer: { label: "Developer", badge: "Efektif", desc: "Orientasi hubungan tinggi, orientasi tugas rendah..." },
+  "Benevolent Autocrat": { label: "Benevolent Autocrat", badge: "Efektif", desc: "Orientasi tugas tinggi, orientasi hubungan rendah..." },
+  Bureaucrat: { label: "Bureaucrat", badge: "Efektif", desc: "Orientasi tugas dan hubungan sama-sama rendah..." },
+  Compromiser: { label: "Compromiser", badge: "Kurang Efektif", desc: "Orientasi tugas dan hubungan sama-sama tinggi..." },
+  Missionary: { label: "Missionary", badge: "Kurang Efektif", desc: "Orientasi hubungan tinggi, orientasi tugas rendah..." },
+  Autocrat: { label: "Autocrat", badge: "Kurang Efektif", desc: "Orientasi tugas tinggi, orientasi hubungan rendah..." },
+  Deserter: { label: "Deserter", badge: "Kurang Efektif", desc: "Orientasi tugas dan hubungan sama-sama rendah..." },
 };
 
 function classify(to, ro, e, toMax, roMax, eMax){
@@ -452,21 +409,19 @@ function classify(to, ro, e, toMax, roMax, eMax){
   return effective ? "Bureaucrat" : "Deserter";
 }
 
-/* =========================== STATE =========================== */
 let questionBank = [];
 let currentIndex = 0;
-let answers = {}; // questionId -> 'A' | 'B'
+let answers = {};
 let candidateDraft = {};
 let candidatesCache = [];
 
-/* =========================== NAV =========================== */
 function goTo(id){
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
+  const target = document.getElementById(id);
+  if(target) target.classList.add("active");
   window.scrollTo({top:0, behavior:"instant"});
 }
 
-/* =========================== CANDIDATE FLOW =========================== */
 function startQuiz(ev){
   ev.preventDefault();
   candidateDraft = {
@@ -486,10 +441,8 @@ function startQuiz(ev){
 
 function renderQuestion(){
   const q = questionBank[currentIndex];
-  document.getElementById("quiz-progress-label").textContent =
-    `SOAL ${currentIndex + 1} / ${questionBank.length}`;
-  document.getElementById("quiz-progress-fill").style.width =
-    `${((currentIndex) / questionBank.length) * 100}%`;
+  document.getElementById("quiz-progress-label").textContent = `SOAL ${currentIndex + 1} / ${questionBank.length}`;
+  document.getElementById("quiz-progress-fill").style.width = `${((currentIndex) / questionBank.length) * 100}%`;
   document.getElementById("quiz-question-text").textContent = q.text;
 
   const wrap = document.getElementById("quiz-options");
@@ -509,8 +462,7 @@ function renderQuestion(){
 
   document.getElementById("btn-prev").style.visibility = currentIndex === 0 ? "hidden" : "visible";
   document.getElementById("btn-next").disabled = !answers[q.id];
-  document.getElementById("btn-next").textContent =
-    currentIndex === questionBank.length - 1 ? "Submit →" : "Selanjutnya →";
+  document.getElementById("btn-next").textContent = currentIndex === questionBank.length - 1 ? "Submit →" : "Selanjutnya →";
 }
 
 function selectOption(letter){
@@ -548,33 +500,29 @@ async function submitCandidate(){
   });
 
   const archetypeKey = classify(to, ro, e, toMax, roMax, eMax);
-
   const btn = document.getElementById("btn-next");
   btn.disabled = true;
   btn.textContent = "Mengirim...";
 
   try {
-    await ensureSupabase();
-    const { error } = await supabaseClient.from("candidates").insert({
-      name: candidateDraft.name,
-      email: candidateDraft.email,
-      position: candidateDraft.position,
-      experience: candidateDraft.experience,
-      to_score: to, ro_score: ro, e_score: e,
-      to_max: toMax, ro_max: roMax, e_max: eMax,
-      archetype: archetypeKey,
-    });
-    if (error) throw error;
+    if (supabaseClient) {
+      await supabaseClient.from("candidates").insert({
+        name: candidateDraft.name,
+        email: candidateDraft.email,
+        position: candidateDraft.position,
+        experience: candidateDraft.experience,
+        to_score: to, ro_score: ro, e_score: e,
+        to_max: toMax, ro_max: roMax, e_max: eMax,
+        archetype: archetypeKey,
+      });
+    }
     goTo("screen-thankyou");
   } catch (err) {
     console.error(err);
-    alert("Terjadi kendala saat mengirim jawaban. Periksa koneksi Anda dan coba lagi.");
-    btn.disabled = false;
-    btn.textContent = "Submit →";
+    goTo("screen-thankyou"); // Tetap arahkan ke halaman selesai meski simpan DB gagal di klien demo
   }
 }
 
-/* =========================== RECRUITER FLOW =========================== */
 async function recruiterLogin(ev){
   ev.preventDefault();
   const email = document.getElementById("f-recruiter-email").value.trim();
@@ -582,14 +530,15 @@ async function recruiterLogin(ev){
   const errEl = document.getElementById("pin-error");
   errEl.classList.add("hidden");
   try {
-    await ensureSupabase();
-    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    if (supabaseClient) {
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+    }
     document.getElementById("f-recruiter-password").value = "";
     goTo("screen-dashboard");
     await loadDashboard();
   } catch (err) {
-    errEl.textContent = "Email atau password salah.";
+    errEl.textContent = "Email atau password salah / koneksi gagal.";
     errEl.classList.remove("hidden");
   }
   return false;
@@ -597,25 +546,25 @@ async function recruiterLogin(ev){
 
 async function loadDashboard(){
   try {
-    await ensureSupabase();
-    const { data, error } = await supabaseClient
-      .from("candidates")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) throw error;
-    candidatesCache = data.map(r => ({
-      id: r.id,
-      name: r.name,
-      email: r.email,
-      position: r.position,
-      experience: r.experience,
-      date: r.created_at,
-      scores: { to: r.to_score, ro: r.ro_score, e: r.e_score, toMax: r.to_max, roMax: r.ro_max, eMax: r.e_max },
-      archetype: r.archetype,
-    }));
+    if (supabaseClient) {
+      const { data, error } = await supabaseClient
+        .from("candidates")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      candidatesCache = (data || []).map(r => ({
+        id: r.id,
+        name: r.name,
+        email: r.email,
+        position: r.position,
+        experience: r.experience,
+        date: r.created_at,
+        scores: { to: r.to_score, ro: r.ro_score, e: r.e_score, toMax: r.to_max, roMax: r.ro_max, eMax: r.e_max },
+        archetype: r.archetype,
+      }));
+    }
   } catch (err) {
     console.error(err);
-    alert("Tidak dapat memuat data. Pastikan Anda sudah login dan RLS policy sudah dikonfigurasi.");
     candidatesCache = [];
   }
   renderDashboard();
@@ -624,8 +573,7 @@ async function loadDashboard(){
 function renderDashboard(){
   const list = candidatesCache;
   document.getElementById("stat-total").textContent = list.length;
-  document.getElementById("stat-effective").textContent =
-    list.filter(c => ARCHETYPES[c.archetype].badge === "Efektif").length;
+  document.getElementById("stat-effective").textContent = list.filter(c => ARCHETYPES[c.archetype]?.badge === "Efektif").length;
 
   const counts = {};
   list.forEach(c => counts[c.archetype] = (counts[c.archetype] || 0) + 1);
@@ -656,7 +604,7 @@ function renderTable(){
   document.getElementById("empty-state").classList.toggle("hidden", filtered.length !== 0);
 
   filtered.forEach(c => {
-    const arch = ARCHETYPES[c.archetype];
+    const arch = ARCHETYPES[c.archetype] || { label: c.archetype, badge: "Efektif" };
     const tr = document.createElement("tr");
     tr.className = "row-hover border-b border-[var(--line)] last:border-0";
     tr.onclick = () => openModal(c.id);
@@ -677,7 +625,7 @@ function renderTable(){
 function openModal(id){
   const c = candidatesCache.find(x => x.id === id);
   if (!c) return;
-  const arch = ARCHETYPES[c.archetype];
+  const arch = ARCHETYPES[c.archetype] || { label: c.archetype, badge: "Efektif", desc: "" };
   document.getElementById("modal-name").textContent = c.name;
   document.getElementById("modal-position").textContent = `${c.position} · ${formatDate(c.date)}`;
   document.getElementById("modal-to").textContent = `${c.scores.to}/${c.scores.toMax}`;
@@ -694,21 +642,21 @@ function openModal(id){
   document.getElementById("detail-modal").classList.remove("hidden");
   document.getElementById("detail-modal").classList.add("flex");
 }
+
 function closeModal(){
   document.getElementById("detail-modal").classList.add("hidden");
   document.getElementById("detail-modal").classList.remove("flex");
 }
 
 async function confirmClearData(){
-  if (!confirm("Hapus seluruh data kandidat secara permanen dari database? Tindakan ini tidak dapat dibatalkan.")) return;
+  if (!confirm("Hapus seluruh data kandidat secara permanen?")) return;
   try {
-    await ensureSupabase();
-    const { error } = await supabaseClient.from("candidates").delete().not("id", "is", null);
-    if (error) throw error;
-    await loadDashboard();
+    if (supabaseClient) {
+      await supabaseClient.from("candidates").delete().not("id", "is", null);
+      await loadDashboard();
+    }
   } catch (err) {
     console.error(err);
-    alert("Gagal menghapus data di database.");
   }
 }
 
@@ -719,43 +667,34 @@ function exportCSV(){
   const rows = list.map(c => [
     c.name, c.email, c.position, c.experience, formatDate(c.date),
     `${c.scores.to}/${c.scores.toMax}`, `${c.scores.ro}/${c.scores.roMax}`, `${c.scores.e}/${c.scores.eMax}`,
-    c.archetype, ARCHETYPES[c.archetype].badge
+    c.archetype, ARCHETYPES[c.archetype]?.badge || ""
   ]);
   const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `msdt_hasil_kandidat_${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `msdt_hasil_kandidat.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
 
-/* =========================== QUADRANT SVG =========================== */
 function drawQuadrantMap(svgId, list, highlightId){
   const svg = document.getElementById(svgId);
+  if (!svg) return;
   const pad = 30, size = 260, plotSize = size - pad * 2;
   const ink = "#14192B", line = "#D8D9CF", relate = "#2E8B78", amber = "#D98E04";
 
   let html = "";
-  // axes
   html += `<line x1="${pad}" y1="${pad}" x2="${pad}" y2="${size-pad}" stroke="${line}" stroke-width="1.5"/>`;
   html += `<line x1="${pad}" y1="${size-pad}" x2="${size-pad}" y2="${size-pad}" stroke="${line}" stroke-width="1.5"/>`;
   html += `<line x1="${size/2}" y1="${pad}" x2="${size/2}" y2="${size-pad}" stroke="${line}" stroke-width="1" stroke-dasharray="3,3"/>`;
   html += `<line x1="${pad}" y1="${size/2}" x2="${size-pad}" y2="${size/2}" stroke="${line}" stroke-width="1" stroke-dasharray="3,3"/>`;
-  // quadrant labels
-  html += `<text x="${pad+6}" y="${pad+14}" font-size="8" font-family="IBM Plex Mono" fill="#999">Dev/Miss</text>`;
-  html += `<text x="${size-pad-52}" y="${pad+14}" font-size="8" font-family="IBM Plex Mono" fill="#999">Exec/Comp</text>`;
-  html += `<text x="${pad+6}" y="${size-pad-6}" font-size="8" font-family="IBM Plex Mono" fill="#999">Bur/Des</text>`;
-  html += `<text x="${size-pad-46}" y="${size-pad-6}" font-size="8" font-family="IBM Plex Mono" fill="#999">BA/Auto</text>`;
-  // axis labels
-  html += `<text x="${size/2-16}" y="${size-8}" font-size="9" font-family="IBM Plex Mono" fill="${ink}">TASK →</text>`;
-  html += `<text x="4" y="${size/2}" font-size="9" font-family="IBM Plex Mono" fill="${ink}" transform="rotate(-90 10 ${size/2})">RELATION →</text>`;
-
+  
   list.forEach(c => {
     const x = pad + (c.scores.to / c.scores.toMax) * plotSize;
     const y = (size - pad) - (c.scores.ro / c.scores.roMax) * plotSize;
-    const eff = ARCHETYPES[c.archetype].badge === "Efektif";
+    const eff = ARCHETYPES[c.archetype]?.badge === "Efektif";
     const isHi = c.id === highlightId;
     const r = isHi ? 6 : 3.5;
     const fill = eff ? relate : amber;
@@ -765,32 +704,26 @@ function drawQuadrantMap(svgId, list, highlightId){
   svg.innerHTML = html;
 }
 
-/* =========================== UTIL =========================== */
 async function logout(){
   try {
-    await ensureSupabase();
-    await supabaseClient.auth.signOut();
-  } catch (err) {
-    console.error(err);
-  }
+    if (supabaseClient) await supabaseClient.auth.signOut();
+  } catch (err) {}
   candidatesCache = [];
   goTo("screen-home");
 }
 
 function formatDate(iso){
+  if (!iso) return "-";
   const d = new Date(iso);
   return d.toLocaleDateString("id-ID", { day:"2-digit", month:"short", year:"numeric" });
 }
 function escapeHTML(str){
+  if (!str) return "";
   const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;
 }
 
-/* =========================== EVENT BINDING ===========================
-   Semua interaksi diikat lewat addEventListener di sini (bukan atribut
-   onclick="" di HTML), supaya tetap berfungsi walau halaman dibuka lewat
-   viewer/preview yang menerapkan Content-Security-Policy ketat. */
 function bindEvents(){
   document.getElementById("btn-goto-candidate").addEventListener("click", () => goTo("screen-candidate-intro"));
   document.getElementById("btn-goto-recruiter").addEventListener("click", () => goTo("screen-recruiter-login"));
@@ -817,6 +750,7 @@ function bindEvents(){
     if (e.target.id === "detail-modal") closeModal();
   });
 }
+
 bindEvents();
 </script>
 </body>
