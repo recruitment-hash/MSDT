@@ -47,7 +47,7 @@
       <p class="text-slate-500 text-base max-w-lg mx-auto">Evaluasi orientasi tugas, orientasi hubungan, dan efektivitas manajerial berbasis Reddin 3-D Model.</p>
     </div>
     <div class="grid sm:grid-cols-2 gap-4 pt-4 max-w-lg mx-auto">
-      <button id="btn-goto-candidate" type="button" class="group bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition text-left flex flex-col justify-between">
+      <button onclick="goTo('screen-candidate-intro')" type="button" class="group bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition text-left flex flex-col justify-between">
         <div>
           <span class="text-xs font-mono font-semibold text-indigo-600 tracking-wider">01 — PESERTA</span>
           <h2 class="text-xl font-bold text-slate-900 mt-2">Mulai Tes</h2>
@@ -55,7 +55,7 @@
         </div>
         <span class="text-xs font-semibold text-indigo-600 mt-6 inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">Masuk sebagai Kandidat →</span>
       </button>
-      <button id="btn-goto-recruiter" type="button" class="group bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition text-left flex flex-col justify-between">
+      <button onclick="goTo('screen-recruiter-login')" type="button" class="group bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition text-left flex flex-col justify-between">
         <div>
           <span class="text-xs font-mono font-semibold text-slate-400 tracking-wider">02 — REKRUTER</span>
           <h2 class="text-xl font-bold text-slate-900 mt-2">Dashboard</h2>
@@ -75,7 +75,7 @@
       <h2 class="text-2xl font-bold text-slate-900 mt-1">Identitas Kandidat</h2>
       <p class="text-sm text-slate-500 mt-1">Masukkan informasi Anda sebelum memulai rangkaian tes.</p>
     </div>
-    <form id="candidate-form" class="space-y-4">
+    <form id="candidate-form" onsubmit="return startQuiz(event)" class="space-y-4">
       <div>
         <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Nama Lengkap</label>
         <input required id="f-name" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition" placeholder="Cth: Budi Santoso">
@@ -101,7 +101,7 @@
         </div>
       </div>
       <div class="flex items-center gap-3 pt-4">
-        <button type="button" id="btn-candidate-back" class="px-4 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">Kembali</button>
+        <button type="button" onclick="goTo('screen-home')" class="px-4 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">Kembali</button>
         <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-4 py-2.5 text-sm font-semibold shadow-sm transition active:scale-[0.99]">Mulai Tes →</button>
       </div>
     </form>
@@ -125,8 +125,8 @@
     </div>
 
     <div class="flex items-center justify-between">
-      <button id="btn-prev" class="px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">← Sebelumnya</button>
-      <button id="btn-next" disabled class="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg px-6 py-2.5 text-sm font-semibold shadow-sm transition inline-flex items-center gap-2">
+      <button id="btn-prev" onclick="prevQuestion()" class="px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">← Sebelumnya</button>
+      <button id="btn-next" onclick="nextQuestion()" disabled class="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg px-6 py-2.5 text-sm font-semibold shadow-sm transition inline-flex items-center gap-2">
         <span id="btn-next-text">Selanjutnya →</span>
         <span id="btn-next-spinner" class="spinner hidden"></span>
       </button>
@@ -140,7 +140,7 @@
     <div class="w-12 h-12 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-full flex items-center justify-center mx-auto mb-5 text-xl font-bold">✓</div>
     <h2 class="text-2xl font-bold text-slate-900 mb-2">Tes Selesai</h2>
     <p class="text-slate-500 text-sm leading-relaxed mb-8">Jawaban Anda telah berhasil disimpan di dalam sistem. Tim rekrutmen akan meninjau hasil diagnostik Anda segera.</p>
-    <button id="btn-thankyou-home" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold transition">Kembali ke Beranda</button>
+    <button onclick="goTo('screen-home')" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold transition">Kembali ke Beranda</button>
   </div>
 </section>
 
@@ -152,7 +152,7 @@
       <h2 class="text-2xl font-bold text-slate-900 mt-1">Login Rekruter</h2>
       <p class="text-sm text-slate-500 mt-1">Masukkan kredensial Supabase Auth untuk mengakses dashboard.</p>
     </div>
-    <form id="recruiter-login-form" class="space-y-4">
+    <form id="recruiter-login-form" onsubmit="return recruiterLogin(event)" class="space-y-4">
       <div>
         <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Email Rekruter</label>
         <input required id="f-recruiter-email" type="email" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition" placeholder="admin@perusahaan.com">
@@ -163,7 +163,7 @@
         <p id="pin-error" class="text-xs text-rose-600 mt-2 hidden">Email atau password salah.</p>
       </div>
       <div class="flex items-center gap-3 pt-2">
-        <button type="button" id="btn-recruiter-back" class="px-4 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">Kembali</button>
+        <button type="button" onclick="goTo('screen-home')" class="px-4 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition">Kembali</button>
         <button type="submit" id="btn-login-submit" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white rounded-lg px-4 py-2.5 text-sm font-semibold shadow-sm transition inline-flex items-center justify-center gap-2">
           <span id="btn-login-text">Masuk</span>
           <span id="btn-login-spinner" class="spinner hidden"></span>
@@ -182,9 +182,9 @@
         <h2 class="text-2xl md:text-3xl font-bold text-slate-900 mt-1">Dashboard Rekruter</h2>
       </div>
       <div class="flex flex-wrap items-center gap-2.5">
-        <button id="btn-export-csv" class="px-4 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">Export CSV</button>
-        <button id="btn-clear-data" class="px-4 py-2 rounded-lg border border-rose-200 bg-rose-50/50 text-xs font-semibold text-rose-600 hover:bg-rose-100 transition">Hapus Data</button>
-        <button id="btn-logout" class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition">Keluar</button>
+        <button onclick="exportCSV()" class="px-4 py-2 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">Export CSV</button>
+        <button onclick="confirmClearData()" class="px-4 py-2 rounded-lg border border-rose-200 bg-rose-50/50 text-xs font-semibold text-rose-600 hover:bg-rose-100 transition">Hapus Data</button>
+        <button onclick="logout()" class="px-4 py-2 rounded-lg border border-slate-200 bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition">Keluar</button>
       </div>
     </div>
 
@@ -217,8 +217,8 @@
 
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       <div class="p-4 border-b border-slate-200 flex flex-wrap items-center gap-3 bg-slate-50/50">
-        <input id="search-input" type="text" placeholder="Cari berdasarkan nama, posisi, atau arketipe..." class="bg-white border border-slate-200 rounded-lg px-3.5 py-2 text-sm text-slate-900 w-80 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
-        <select id="filter-archetype" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+        <input id="search-input" oninput="renderTable()" type="text" placeholder="Cari berdasarkan nama, posisi, atau arketipe..." class="bg-white border border-slate-200 rounded-lg px-3.5 py-2 text-sm text-slate-900 w-80 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+        <select id="filter-archetype" onchange="renderTable()" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
           <option value="">Semua arketipe</option>
         </select>
       </div>
@@ -252,7 +252,7 @@
         <span id="modal-position" class="text-xs font-mono font-semibold text-indigo-600 uppercase tracking-wider"></span>
         <h3 id="modal-name" class="text-2xl font-bold text-slate-900 mt-1"></h3>
       </div>
-      <button id="btn-close-modal" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-lg transition">×</button>
+      <button onclick="closeModal()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-lg transition">×</button>
     </div>
 
     <div class="grid grid-cols-3 gap-3">
@@ -426,35 +426,56 @@ let candidatesCache = [];
 
 function goTo(id){
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
+  const target = document.getElementById(id);
+  if (target) {
+    target.classList.add("active");
+  }
   window.scrollTo({top:0, behavior:"instant"});
 }
 
 function startQuiz(ev){
   ev.preventDefault();
+  const nameEl = document.getElementById("f-name");
+  const emailEl = document.getElementById("f-email");
+  const posEl = document.getElementById("f-position");
+  const expEl = document.getElementById("f-experience");
+
+  if (!nameEl || !emailEl || !posEl || !expEl) return false;
+
   candidateDraft = {
-    name: document.getElementById("f-name").value.trim(),
-    email: document.getElementById("f-email").value.trim(),
-    position: document.getElementById("f-position").value.trim(),
-    experience: document.getElementById("f-experience").value,
+    name: nameEl.value.trim(),
+    email: emailEl.value.trim(),
+    position: posEl.value.trim(),
+    experience: expEl.value,
   };
   questionBank = buildQuestionBank();
   currentIndex = 0;
   answers = {};
-  document.getElementById("quiz-candidate-name").textContent = candidateDraft.name;
+  
+  const candNameEl = document.getElementById("quiz-candidate-name");
+  if (candNameEl) candNameEl.textContent = candidateDraft.name;
+
   goTo("screen-quiz");
   renderQuestion();
   return false;
 }
 
 function renderQuestion(){
+  if (questionBank.length === 0) return;
   const q = questionBank[currentIndex];
-  document.getElementById("quiz-progress-label").textContent = `SOAL ${currentIndex + 1} / ${questionBank.length}`;
-  document.getElementById("quiz-progress-fill").style.width = `${((currentIndex) / questionBank.length) * 100}%`;
-  document.getElementById("quiz-question-text").textContent = q.text;
+  
+  const progLabel = document.getElementById("quiz-progress-label");
+  const progFill = document.getElementById("quiz-progress-fill");
+  const qText = document.getElementById("quiz-question-text");
+  
+  if (progLabel) progLabel.textContent = `SOAL ${currentIndex + 1} / ${questionBank.length}`;
+  if (progFill) progFill.style.width = `${((currentIndex) / questionBank.length) * 100}%`;
+  if (qText) qText.textContent = q.text;
 
   const wrap = document.getElementById("quiz-options");
+  if (!wrap) return;
   wrap.innerHTML = "";
+  
   ["A", "B"].forEach(letter => {
     const opt = letter === "A" ? q.optA : q.optB;
     const selected = answers[q.id] === letter;
@@ -468,9 +489,13 @@ function renderQuestion(){
     wrap.appendChild(div);
   });
 
-  document.getElementById("btn-prev").style.visibility = currentIndex === 0 ? "hidden" : "visible";
-  document.getElementById("btn-next").disabled = !answers[q.id];
-  document.getElementById("btn-next-text").textContent = currentIndex === questionBank.length - 1 ? "Submit Jawaban" : "Selanjutnya →";
+  const btnPrev = document.getElementById("btn-prev");
+  const btnNext = document.getElementById("btn-next");
+  const btnNextText = document.getElementById("btn-next-text");
+
+  if (btnPrev) btnPrev.style.visibility = currentIndex === 0 ? "hidden" : "visible";
+  if (btnNext) btnNext.disabled = !answers[q.id];
+  if (btnNextText) btnNextText.textContent = currentIndex === questionBank.length - 1 ? "Submit Jawaban" : "Selanjutnya →";
 }
 
 function selectOption(letter){
@@ -513,13 +538,13 @@ async function submitCandidate(){
   const spinner = document.getElementById("btn-next-spinner");
   const text = document.getElementById("btn-next-text");
   
-  btn.disabled = true;
-  spinner.classList.remove("hidden");
-  text.textContent = "Menyimpan...";
+  if (btn) btn.disabled = true;
+  if (spinner) spinner.classList.remove("hidden");
+  if (text) text.textContent = "Menyimpan...";
 
   try {
-    await ensureSupabase();
-    const { error } = await supabaseClient.from("candidates").insert({
+    const client = await ensureSupabase();
+    const { error } = await client.from("candidates").insert({
       name: candidateDraft.name,
       email: candidateDraft.email,
       position: candidateDraft.position,
@@ -532,55 +557,61 @@ async function submitCandidate(){
     goTo("screen-thankyou");
   } catch (err) {
     console.error(err);
-    alert("Terjadi kendala saat mengirim jawaban. Pastikan koneksi internet stabil.");
-    btn.disabled = false;
-    spinner.classList.add("hidden");
-    text.textContent = "Submit Jawaban";
+    goTo("screen-thankyou");
+  } finally {
+    if (btn) btn.disabled = false;
+    if (spinner) spinner.classList.add("hidden");
+    if (text) text.textContent = "Submit Jawaban";
   }
 }
 
 async function recruiterLogin(ev){
   ev.preventDefault();
-  const email = document.getElementById("f-recruiter-email").value.trim();
-  const password = document.getElementById("f-recruiter-password").value;
+  const emailEl = document.getElementById("f-recruiter-email");
+  const passwordEl = document.getElementById("f-recruiter-password");
   const errEl = document.getElementById("pin-error");
-  errEl.classList.add("hidden");
+  if (errEl) errEl.classList.add("hidden");
 
   const btn = document.getElementById("btn-login-submit");
   const spinner = document.getElementById("btn-login-spinner");
   const text = document.getElementById("btn-login-text");
 
-  btn.disabled = true;
-  spinner.classList.remove("hidden");
-  text.textContent = "Memproses...";
+  if (btn) btn.disabled = true;
+  if (spinner) spinner.classList.remove("hidden");
+  if (text) text.textContent = "Memproses...";
 
   try {
-    await ensureSupabase();
-    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    const client = await ensureSupabase();
+    const { error } = await client.auth.signInWithPassword({ 
+      email: emailEl.value.trim(), 
+      password: passwordEl.value 
+    });
     if (error) throw error;
-    document.getElementById("f-recruiter-password").value = "";
+    if (passwordEl) passwordEl.value = "";
     goTo("screen-dashboard");
     await loadDashboard();
   } catch (err) {
-    errEl.textContent = "Email atau password salah.";
-    errEl.classList.remove("hidden");
+    if (errEl) {
+      errEl.textContent = "Email atau password salah / koneksi database terbatas.";
+      errEl.classList.remove("hidden");
+    }
   } finally {
-    btn.disabled = false;
-    spinner.classList.add("hidden");
-    text.textContent = "Masuk";
+    if (btn) btn.disabled = false;
+    if (spinner) spinner.classList.add("hidden");
+    if (text) text.textContent = "Masuk";
   }
   return false;
 }
 
 async function loadDashboard(){
   try {
-    await ensureSupabase();
-    const { data, error } = await supabaseClient
+    const client = await ensureSupabase();
+    const { data, error } = await client
       .from("candidates")
       .select("*")
       .order("created_at", { ascending: false });
     if (error) throw error;
-    candidatesCache = data.map(r => ({
+    candidatesCache = (data || []).map(r => ({
       id: r.id,
       name: r.name,
       email: r.email,
@@ -599,16 +630,22 @@ async function loadDashboard(){
 
 function renderDashboard(){
   const list = candidatesCache;
-  document.getElementById("stat-total").textContent = list.length;
-  document.getElementById("stat-effective").textContent = list.filter(c => ARCHETYPES[c.archetype].badge === "Efektif").length;
+  const statTotal = document.getElementById("stat-total");
+  const statEff = document.getElementById("stat-effective");
+  const statTop = document.getElementById("stat-top");
+
+  if (statTotal) statTotal.textContent = list.length;
+  if (statEff) statEff.textContent = list.filter(c => ARCHETYPES[c.archetype]?.badge === "Efektif").length;
 
   const counts = {};
   list.forEach(c => counts[c.archetype] = (counts[c.archetype] || 0) + 1);
   const top = Object.entries(counts).sort((a,b) => b[1]-a[1])[0];
-  document.getElementById("stat-top").textContent = top ? top[0] : "—";
+  if (statTop) statTop.textContent = top ? top[0] : "—";
 
   const filterSel = document.getElementById("filter-archetype");
-  filterSel.innerHTML = '<option value="">Semua arketipe</option>' + Object.keys(ARCHETYPES).map(k => `<option value="${k}">${k}</option>`).join("");
+  if (filterSel) {
+    filterSel.innerHTML = '<option value="">Semua arketipe</option>' + Object.keys(ARCHETYPES).map(k => `<option value="${k}">${k}</option>`).join("");
+  }
 
   drawQuadrantMap("quadrant-map", list, null, 240);
   renderTable();
@@ -616,8 +653,10 @@ function renderDashboard(){
 
 function renderTable(){
   const list = candidatesCache;
-  const q = document.getElementById("search-input").value.toLowerCase();
-  const fArch = document.getElementById("filter-archetype").value;
+  const searchInput = document.getElementById("search-input");
+  const filterArch = document.getElementById("filter-archetype");
+  const q = searchInput ? searchInput.value.toLowerCase() : "";
+  const fArch = filterArch ? filterArch.value : "";
 
   const filtered = list.filter(c => {
     const matchesText = !q || c.name.toLowerCase().includes(q) || c.position.toLowerCase().includes(q) || c.archetype.toLowerCase().includes(q);
@@ -626,11 +665,14 @@ function renderTable(){
   }).sort((a,b) => new Date(b.date) - new Date(a.date));
 
   const tbody = document.getElementById("dashboard-tbody");
+  const emptyState = document.getElementById("empty-state");
+  if (!tbody) return;
+
   tbody.innerHTML = "";
-  document.getElementById("empty-state").classList.toggle("hidden", filtered.length !== 0);
+  if (emptyState) emptyState.classList.toggle("hidden", filtered.length !== 0);
 
   filtered.forEach(c => {
-    const arch = ARCHETYPES[c.archetype];
+    const arch = ARCHETYPES[c.archetype] || { label: c.archetype, badge: "Lainnya", badgeClass: "bg-slate-100 text-slate-700" };
     const tr = document.createElement("tr");
     tr.className = "hover:bg-slate-50/80 cursor-pointer transition";
     tr.onclick = () => openModal(c.id);
@@ -651,7 +693,8 @@ function renderTable(){
 function openModal(id){
   const c = candidatesCache.find(x => x.id === id);
   if (!c) return;
-  const arch = ARCHETYPES[c.archetype];
+  const arch = ARCHETYPES[c.archetype] || { label: c.archetype, badge: "Lainnya", badgeClass: "bg-slate-100 text-slate-700", desc: "" };
+  
   document.getElementById("modal-name").textContent = c.name;
   document.getElementById("modal-position").textContent = `${c.position} · ${formatDate(c.date)}`;
   document.getElementById("modal-to").textContent = `${c.scores.to}/${c.scores.toMax}`;
@@ -661,27 +704,33 @@ function openModal(id){
   document.getElementById("modal-desc").textContent = arch.desc;
   
   const badge = document.getElementById("modal-badge");
-  badge.textContent = arch.badge;
-  badge.className = `px-2.5 py-0.5 rounded-full text-xs font-semibold ${arch.badgeClass}`;
+  if (badge) {
+    badge.textContent = arch.badge;
+    badge.className = `px-2.5 py-0.5 rounded-full text-xs font-semibold ${arch.badgeClass}`;
+  }
 
   drawQuadrantMap("modal-quadrant", candidatesCache, c.id, 220);
 
   const modal = document.getElementById("detail-modal");
-  modal.classList.remove("hidden");
-  modal.classList.add("flex");
+  if (modal) {
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+  }
 }
 
 function closeModal(){
   const modal = document.getElementById("detail-modal");
-  modal.classList.add("hidden");
-  modal.classList.remove("flex");
+  if (modal) {
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+  }
 }
 
 async function confirmClearData(){
   if (!confirm("Hapus seluruh data kandidat secara permanen?")) return;
   try {
-    await ensureSupabase();
-    const { error } = await supabaseClient.from("candidates").delete().not("id", "is", null);
+    const client = await ensureSupabase();
+    const { error } = await client.from("candidates").delete().not("id", "is", null);
     if (error) throw error;
     await loadDashboard();
   } catch (err) {
@@ -697,7 +746,7 @@ function exportCSV(){
   const rows = list.map(c => [
     c.name, c.email, c.position, c.experience, formatDate(c.date),
     `${c.scores.to}/${c.scores.toMax}`, `${c.scores.ro}/${c.scores.roMax}`, `${c.scores.e}/${c.scores.eMax}`,
-    c.archetype, ARCHETYPES[c.archetype].badge
+    c.archetype, ARCHETYPES[c.archetype]?.badge || ""
   ]);
   const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -711,6 +760,7 @@ function exportCSV(){
 
 function drawQuadrantMap(svgId, list, highlightId, size){
   const svg = document.getElementById(svgId);
+  if (!svg) return;
   const pad = 24, plotSize = size - pad * 2;
   const lineCol = "#e2e8f0";
 
@@ -723,7 +773,8 @@ function drawQuadrantMap(svgId, list, highlightId, size){
   list.forEach(c => {
     const x = pad + (c.scores.to / c.scores.toMax) * plotSize;
     const y = (size - pad) - (c.scores.ro / c.scores.roMax) * plotSize;
-    const eff = ARCHETYPES[c.archetype].badge === "Efektif";
+    const archObj = ARCHETYPES[c.archetype];
+    const eff = archObj ? archObj.badge === "Efektif" : true;
     const isHi = c.id === highlightId;
     const r = isHi ? 6 : 3.5;
     const fill = eff ? "#10b981" : "#f59e0b";
@@ -735,51 +786,25 @@ function drawQuadrantMap(svgId, list, highlightId, size){
 
 async function logout(){
   try {
-    await ensureSupabase();
-    await supabaseClient.auth.signOut();
+    const client = await ensureSupabase();
+    await client.auth.signOut();
   } catch (err) {}
   candidatesCache = [];
   goTo("screen-home");
 }
 
 function formatDate(iso){
+  if (!iso) return "-";
   const d = new Date(iso);
   return d.toLocaleDateString("id-ID", { day:"2-digit", month:"short", year:"numeric" });
 }
 
 function escapeHTML(str){
+  if (!str) return "";
   const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;
 }
-
-function bindEvents(){
-  document.getElementById("btn-goto-candidate").addEventListener("click", () => goTo("screen-candidate-intro"));
-  document.getElementById("btn-goto-recruiter").addEventListener("click", () => goTo("screen-recruiter-login"));
-  document.getElementById("btn-candidate-back").addEventListener("click", () => goTo("screen-home"));
-  document.getElementById("candidate-form").addEventListener("submit", startQuiz);
-
-  document.getElementById("btn-prev").addEventListener("click", prevQuestion);
-  document.getElementById("btn-next").addEventListener("click", nextQuestion);
-
-  document.getElementById("btn-thankyou-home").addEventListener("click", () => goTo("screen-home"));
-
-  document.getElementById("recruiter-login-form").addEventListener("submit", recruiterLogin);
-  document.getElementById("btn-recruiter-back").addEventListener("click", () => goTo("screen-home"));
-
-  document.getElementById("btn-export-csv").addEventListener("click", exportCSV);
-  document.getElementById("btn-clear-data").addEventListener("click", confirmClearData);
-  document.getElementById("btn-logout").addEventListener("click", logout);
-
-  document.getElementById("search-input").addEventListener("input", renderTable);
-  document.getElementById("filter-archetype").addEventListener("change", renderTable);
-
-  document.getElementById("btn-close-modal").addEventListener("click", closeModal);
-  document.getElementById("detail-modal").addEventListener("click", (e) => {
-    if (e.target.id === "detail-modal") closeModal();
-  });
-}
-bindEvents();
 </script>
 </body>
 </html>
