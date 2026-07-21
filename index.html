@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSDT | Management Style Diagnostic Test</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  .fade-in { animation: fadeIn .25s ease-out; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(6px);} to {opacity:1; transform: translateY(0);} }
+  .spinner { border: 3px solid #e2e8f0; border-top-color: #4f46e5; border-radius: 50%; width: 2rem; height: 2rem; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg);} }
+</style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+
+<div id="app" class="min-h-screen"></div>
+
+<script>
+/* =========================================================================
+   MSDT — Management Style Diagnostic Test
+   Single-file enterprise web app (Tailwind CDN + Vanilla JS + Supabase)
+   -------------------------------------------------------------------------
+   SUPABASE SETUP — run this SQL once in the Supabase SQL editor:
+
+   create table if not exists public.msdt_candidates (
+     id uuid primary key default gen_random_uuid(),
+     created_at timestamptz not null default now(),
+     full_name text not null,
+     email text not null,
+     position text not null,
+     experience_years numeric not null,
+     answers jsonb not null,
+     jumlah jsonb not null,
+     score_to numeric not null,
+     score_ro numeric not null,
+     score_e numeric not null,
+     score_o numeric not null,
+     archetype text not null
+   );
+   alter table public.msdt_candidates enable row level security;
+   create policy "public insert" on public.msdt_candidates for insert to anon with check (true);
+   create policy "public select" on public.msdt_candidates for select to anon using (true);
+
+   RECRUITER PIN: change CONFIG.RECRUITER_PIN below to configure access.
+   ========================================================================= */
+
+const CONFIG = {
+  SUPABASE_URL: "https://trtxyuzdzfblleaoezqp.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJydHh5dXpkZmxibGVhb2V6dnFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1MzM3NjIsImV4cCI6MjEwMDEwOTc2Mn0.Wr8NylkTu_nVKxpK_1ZdSWmsc8QSRPTHsSLjw8_Q9co",
+  TABLE: "msdt_candidates",
+  RECRUITER_PIN: "1234",
+};
+
+const supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+
+const QUESTIONS = [{"no": 1, "a": "Saya mengabaikan pelanggar-pelanggar peraturan bila saya merasa pasti bahwa tidak ada satu orangpun yang mengetahui tentang pelanggar-pelanggar tersebut.", "b": "Bila saya mengumumkan suatu keputusan yang kurang menyenangkan, saya akan menjelaskan kepada bawahan saya bahwa keputusan ini dibuat oleh Direktur."}, {"no": 2, "a": "Bila ada seorang karyawan yang hasil kerjanya selalu tidak memuaskan saya, saya akan menunggu suatu kesempatan untuk memindahkannya dan bukan untuk memecatnya.", "b": "Bila ada bawahan saya yang dikucilkan dari kelompok kerjanya, saya akan mencarikan cara-cara agar supaya orang lain dapat berteman dengannya."}, {"no": 3, "a": "Bila Direktur memberikan perintah yang kurang menyenangkan, saya pikir adalah cukup bijaksana bila saya menyebutkan namanya dan bukan nama saya.", "b": "Saya biasanya membuat keputusan-keputusan saya sendiri dan menyampaikannya kepada bawahan saya."}, {"no": 4, "a": "Bila saya ditegur oleh atasan saya, saya akan memanggil semua bawahan saya dan mengatakan semua teguran tersebut kepada mereka.", "b": "Saya selalu memberikan tugas-tugas yang sangat sulit kepada karyawan-karyawan yang paling berpengalaman"}, {"no": 5, "a": "Saya selalu melakukan diskusi-diskusi untuk mencapai kata sepakat.", "b": "Saya selalu menganjurkan kepada bawahan saya untuk memberikan usul-usul, tetapi kadang-kadang juga saya langsung membuat suatu tindakan tertentu."}, {"no": 6, "a": "Kadang-kadang saya berpikir bahwa perasaan-perasaan saya dan sikap-sikap saya adalah mementingkan tugas saya.", "b": "Saya mengijinkan bawahan-bawahan saya untuk ikut serta mengambil keputusan yang dibuat berdasarkan atas suara terbanyak."}, {"no": 7, "a": "Bila jumlah dan mutu hasil kerja bagian saya tidak memuaskan, saya menjelaskan kepada bawahan-bawahan saya bahwa Direktur merasa kecewa dan oleh karena itu mereka harus memperbaiki kerja mereka.", "b": "Saya membuat keputusan-keputusan sendiri dan kemudian saya mencoba untuk menjual keputusan-keputusan itu kepada bawahan saya."}, {"no": 8, "a": "Bila saya mengumumkan suatu keputusan yang kurang menyenangkan, saya akan menjelaskan kepada bawahan saya bahwa keputusan ini dibuat oleh Direktur.", "b": "Saya mengijinkan bawahan-bawahan saya untuk ikut serta di dalam pengambilan keputusan, tetapi sayapun menyediakan sesuatu keputusan terakhir."}, {"no": 9, "a": "Saya akan memberikan tugas-tugas yang sulit kepada bawahan saya yang belum berpengalaman, tetapi bila mereka memperoleh kesukaran, saya akan mengambil alih tanggung jawab mereka.", "b": "Bila jumlah dan mutu hasil kerja bagian saya tidak memuaskan, saya menjelaskan kepada bawahan-bawahan saya bahwa Direktur merasa kecewa dan oleh karena itu mereka harus memperbaiki mutu kerja mereka itu."}, {"no": 10, "a": "Saya merasa bahwa adalah penting agar bawahan-bawahan menyukai saya apabila saya bekerja keras untuk mereka.", "b": "Saya membiarkan orang-orang lain menangani tugas-tugas mereka masing-masing, walaupun mereka membuat banyak kesalahan."}, {"no": 11, "a": "Saya menunjukkan minat saya terhadap kehidupan pribadi bawahan-bawahan saya, sebab saya merasa bahwa saya mengerti mengapa mereka mengerjakan sesuatu hal sejauh mereka mengerjakan hal tersebut.", "b": "Saya saya merasa bahwa adalah tidak terlalu perlu untuk bawahan-bawahan saya mengerti mengapa mereka mengerjakan sesuatu hal sejauh mereka mengerjakan hal tersebut."}, {"no": 12, "a": "Saya percaya bahwa bawahan-bawahan yang disiplin tidak akan memperbaiki jumlah atau mutu kerja mereka di dalam jangka waktu yang panjang.", "b": "Bila menghadapi masalah yang sulit, saya berusaha untuk mencapai pemecahan yang paling sedikit bisa diterima oleh sebagian besar orang-orang yang bersangkutan."}, {"no": 13, "a": "Saya berpikir bahwa bila beberapa bawahan saya merasa tidak berbahagia, saya akan mencoba melakukan sesuatu mengenai hal tersebut.", "b": "Saya mengurusi pekerjaan saya sendiri dan saya merasa bahwa pekerjaan saya itu bisa mencapai “Dewan Direksi” untuk mengembangkan ide-ide baru."}, {"no": 14, "a": "Saya menyetujui kenaikan tunjangan-tunjangan untuk staf dan karyawan.", "b": "Saya menunjukkan persetujuan untuk meningkatkan pengetahuan tentang pekerjaan dan perusahaan dari bawahanbawahan saya, walaupun hal itu sebenarnya belum diperlukan untuk kedudukan mereka sekarang."}, {"no": 15, "a": "Saya membiarkan orang-orang lain menangani tugas-tugas mereka masing-masing, walaupun mereka membuat banyak kesalahan.", "b": "Saya membuat keputusan-keputusan sendiri tetapi saya akan mempertimbangkan usul-usul yang masuk di akal dari bawahanbawahan saya yang untuk memperbaiki keputusan tersebut apabila saya bertanya kepada mereka."}, {"no": 16, "a": "Bila ada bawahan saya yang dikucilkan dari kelompok kerjanya, saya akan mencarikan cara-cara agar supaya orang lain dapat berteman dengannya.", "b": "Bila seorang karyawan tidak sanggup menyelesaikan tugasnya, saya akan membantu dia untuk menyelesaikan tugas tersebut"}, {"no": 17, "a": "Saya percaya bahwa suatu penerapan disiplin adalah merupakan seperangkat contoh untuk karyawan-karyawan lainnya.", "b": "Kadang-kadang saya berpikir bahwa perasaan-perasaan saya dan sikap-sikap saya adalah mementingkan tugas saya."}, {"no": 18, "a": "Saya mencela pembicaraan-pembicaraan yang tidak perlu di antara bawahan-bawahan saya selama mereka bekerja.", "b": "Saya menyetujui tunjangan-tunjangan untuk staf dan karyawankaryawan."}, {"no": 19, "a": "Saya selalu memperhatikan mengenai keterlambatan dan kemangkiran.", "b": "Saya percaya bahwa Serikat-Serikat Buruh akan mencoba untuk meruntuhkan kewibawaan pimpinan perusahaan."}, {"no": 20, "a": "Kadang-kadang saya menentang keluhan-keluhan serikat buruh sebagai suatu perkara yang prinsipil.", "b": "Saya merasa bahwa keluhan-keluhan tidak dapat dicegah dan saya mencoba sebaik mungkin untuk dapat dilenyapkan."}, {"no": 21, "a": "Adalah penting bagi saya untuk memperoleh nilai kredit bagi ideide saya yang baik.", "b": "Saya menyuarakan pendapat-pendapat saya di muka umum hanya bila saya merasa bahwa orang lain akan setuju dengan saya."}, {"no": 22, "a": "Saya percaya bahwa Serikat-Serikat Buruh akan mencoba meruntuhkan kewibawaan pimpinan perusahaan.", "b": "Saya percaya bahwa pertemuan-pertemuan yang sering dengan karyawan secara pribadi adalah membantu pengembangan diri mereka."}, {"no": 23, "a": "Saya merasa bahwa tidak terlalu perlu untuk bawahan-bawahan saya mengerti mengapa mereka mengerjakan seuatu hal sejauh mereka mengerjakan hal tersebut.", "b": "Saya merasa bahwa jam pencatat waktu datang dan pulangnya para pegawai, mengurangi keterlambatan."}, {"no": 24, "a": "Saya biasanya membuat keputusan-keputusan saya sendiri dan menyampaikannya kepada bawahan saya.", "b": "Saya merasa bahwa Serikat-Serikat Buruh dan pimpinan perusahaan adalah bekerja untuk mencapai tujuan-tujuan yang sama."}, {"no": 25, "a": "Saya menyukai penggunaan dari skala penggajian karyawan.", "b": "Saya selalu melakukan diskusi-diskusi untuk mencapai kata sepakat."}, {"no": 26, "a": "Saya merasa bangga di dalam kenyataannya bahwa saya biasanya tidak akan menanyakan kepada seseorang untuk mengerjakan suatu tugas yang kalau untuk saya sendiri, tidak akan saya kerjakan.", "b": "Saya berpikir bahwa bila beberapa bawahan saya merasa tidak berbahagia, saya akan mencoba melakukan sesuatu mengenai hal tersebut."}, {"no": 27, "a": "Bila ada suatu tugas yang mendesak, walaupun semua peralatannya sudah disediakan saya akan membiarkannya saja, dan mengatakan kepada salah seorang bawahan saya untuk mengerjakan sesuatu tugas tersebut.", "b": "Adalah penting bagi saya untuk memperoleh nilai kredit bagi ideide saya yang baik."}, {"no": 28, "a": "Tujuan saya adalah mencapai bagaimana tugas-tugas dapat dikerjakan, tanpa saya merasa lebih benci daripada siapapun yang mengerjakan.", "b": "Saya mungkin menentukan tugas-tugas tanpa banyak mempertimbangkan pengalaman atau kemampuan, tetapi saya lebih menuntut pada pencapaian hasil-hasilnya saja."}, {"no": 29, "a": "Saya mungkin menentukan tugas-tugas tanpa banyak mempertimbangkan pengalaman atau kemampuan, tetapi saya lebih menuntut pada pencapaian hasil-hasilnya saja.", "b": "Saya dengan sabar mendengarkan keluhan-keluhan dan ketidakpuasan-ketidakpuasan dari bawahan saya tetapi seringkali saya meralat apa yang mereka katakan."}, {"no": 30, "a": "Saya merasa bahwa keluhan-keluhan tidak dapat dicegah dan saya mencoba sebaik mungkin untuk dapat dilenyapkan.", "b": "Saya percaya bahwa bawahan-bawahan saya akan merasakan kepuasan kerja mereka tanpa merasakan tekanan apapun dari saya."}, {"no": 31, "a": "Bila menghadapi masalah yang sulit, saya berusaha untuk mencapai pemecahan yang paling sedikit bisa diterima oleh sebagian besar orang-orang yang bersangkutan.", "b": "Saya percaya bahwa latihan melalui pengalaman bekerja, adalah lebih bermanfaat daripada pendidikan teoritis"}, {"no": 32, "a": "Saya selalu memberikan tugas-tugas yang sangat sulit kepada karyawan-karyawan yang paling berpengalaman. .", "b": "Saya percaya bahwa kenaikan jabatan adalah semata-mata berdasarkan kemampuan yang ada"}, {"no": 33, "a": "Saya merasa bahwa masalah-masalah yang timbul di antara para karyawan biasanya akan dapat diselesaikan di antara mereka sendiri, tanpa campur tangan dari saya.", "b": "Bila saya ditegur oleh atasan saya, saya akan memanggil semua bawahan saya dan mengatakan semua teguran tersebut kepada mereka."}, {"no": 34, "a": "Saya tidak peduli dengan apa yang dikerjakan oleh karyawan saya di luar jam kerja kantornya.", "b": "Saya percaya bahwa bawahan-bawahan yang disiplin tidak akan memperbaiki jumlah atau mutu kerja mereka di dalam jangka waktu panjang."}, {"no": 35, "a": "Saya memberikan informasi kepada “Dewan Direksi” tidak lebih dari pada apa yang mereka tanyakan.", "b": "Kadang-kadang saya menentang keluhan-keluhan Serikat Buruh sebagai sesuatu perkara yang prinsipil."}, {"no": 36, "a": "Saya kadang-kadang merasa ragu-ragu untuk membuat suatu keputusan yang akan tidak disukai oleh bawahan-bawahan saya.", "b": "Tujuan saya adalah mencapai bagaimana tugas-tugas dapat dikerjakan, tanpa saya merasa lebih benci daripada siapapun yang mengerjakannya."}, {"no": 37, "a": "Saya dengan sabar mendengarkan keluhan-keluhan dan ketidakpuasan–ketidakpuasan dari bawahan saya, tetapi seringkali saya meralat apa yang mereka katakan.", "b": "Saya kadang-kadang merasa ragu-ragu untuk membuat keputusan-keputusan yang akan tidak disukai oleh bawahanbawahan saya."}, {"no": 38, "a": "Saya menyuarakan pendapat-pendapat saya di muka umum hanya bila saya merasa bahwa orang lain akan setuju dengan saya.", "b": "Sebagian besar dari bawahan-bawahan saya dapat menyelesaikan tugas-tugas mereka, bila perlu, tanpa kehadiran saya."}, {"no": 39, "a": "Saya mengurusi pekerjaan saya sendiri, dan saya merasa bahwa pekerjaan saya itu bisa mencapai “Dewan Direksi” untuk mengembangkan ide-ide baru.", "b": "Bila saya memberikan perintah kepada bawahan-bawahan saya, saya menentukan batas waktu untuk mereka menyelesaikannya."}, {"no": 40, "a": "Saya selalu menganjurkan kepada bawahan saya untuk memberikan usul-usul, tetapi kadang-kadang juga saya langsung membuat suatu tindakan tertentu.", "b": "Saya mencoba untuk membuat bawahan-bawahan saya merasa senang hatinya apabila mereka berbicara dengan saya"}, {"no": 41, "a": "Di dalam diskusi, saya memberikan fakta-fakta seperti apa yang mereka pahami, dan membiarkan mereka melukiskan kesimpulankesimpulan mereka sendiri.", "b": "Bila Direktur memberikan perintah yang kurang menyenangkan, saya pikir adalah cukup bijaksana bila saya menyebutkan namanya dan bukan nama saya."}, {"no": 42, "a": "Bila ada tugas-tugas yang tidak dikehendaki yang harus dikerjakan, sebelumnya saya akan menanyakan kepada beberapa sukarelawan yang mau mengerjakan tugas tersebut.", "b": "Saya menunjukkan minat saya terhadap kehidupan pribadi bawahan-bawahan saya, sebab saya merasa bahwa sayapun mengharapkan mereka berbuat seperti itu kepada saya."}, {"no": 43, "a": "Saya adalah seorang yang sangat memperhatikan kebahagiaan karyawan-karyawan saya di dalam mereka mengerjakan tugastugas mereka.", "b": "Saya selalu memperhatikan mengenai keterlambatan dan kemangkiran."}, {"no": 44, "a": "Sebagian besar dari bawahan-bawahan saya dapat menyelesaikan tugas-tugas mereka, bila perlu tanpa kehadiran saya.", "b": "Bila ada sesuatu tugas yang mendesak, walaupun semua peralatannya sesudah disediakan, saya akan membiarkannya saja dan mengatakan kepada salah seorang bawahan saya untuk mengerjakan tugas tersebut."}, {"no": 45, "a": "Saya percaya bahwa bawahan-bawahan saya akan merasakan kepuasan kerja mereka tanpa merasakan tekanan apapun dari saya.", "b": "Saya memberikan informasi kepada “Dewan Direksi” tidak lebih daripada apa yang mereka tanyakan."}, {"no": 46, "a": "Saya percaya bahwa pertemuan-pertemuan yang sering dengan karyawan secara pribadi adalah membantu pengembangan diri mereka.", "b": "Saya adalah seorang yang sangat memperhatikan karyawankaryawan saya di dalam mereka mengerjakan tugas-tugas mereka."}, {"no": 47, "a": "Saya menunjukkan persetujuan untuk meningkatkan pengetahuan tentang pekerjaan dan perusahaan dari bawahanbawahan saya, walaupun hal itu sebenarnya belum diperlukan untuk kedudukan mereka sekarang.", "b": "Saya mengawasi benar bawahan-bawahan saya yang kurang mahir di dalam bekerjanya atau bawahan-bawahan saya yang hasil kerjanya kurang memuaskan."}, {"no": 48, "a": "Saya mengijinkan bawahan-bawahan saya untuk ikut serta mengambil keputusan dan saya selalu mematuhi keputusan yang dibuat berdasarkan atas suara terbanyak.", "b": "Saya membuat bawahan-bawahan saya bekerja keras, dan saya berusaha menyakinkan mereka bahwa biasanya mereka mendapat perlakukan yang adil dari “Dewan Direksi”."}, {"no": 49, "a": "Saya merasa bahwa semua karyawan pada jabatan yang sama seharusnya memperoleh gaji yang sama.", "b": "Bila ada seorang karyawan yang hasil kerjanya selalu tidak memuaskan saya, saya akan menunggu suatu kesempatan untuk memindahkannya dan bukan untuk memecatnya."}, {"no": 50, "a": "Saya merasa bahwa tujuan-tujuan Serikat Buruh dan tujuantujuan perusahaan adalah saling berbeda dan saya mencoba untuk tidak membuat pandangan saya secara jelas.", "b": "Saya merasa bahwa adalah penting agar bawahan saya menyukai saya apabila saya bekerja keras untuk mereka."}, {"no": 51, "a": "Saya mengawasi benar bawahan-bawahan saya yang kurang mahir di dalam bekerjanya atau bawahan-bawahan saya yang hasil kerjanya kurang memuaskan.", "b": "Saya mencela pembicaraan-pembicaraan yang tidak perlu di antara bawahan-bawahan saya selama mereka bekerja."}, {"no": 52, "a": "Bila saya memberikan perintah kepada bawahan-bawahan saya, saya menentukan batas waktu untuk mereka menyelesaikannya.", "b": "Saya merasa bangga di dalam kenyataannya bahwa saya biasanya tidak akan menanyakan kepada seseorang untuk mengerjakan suatu tugas yang kalau saya sendiri tidak akan saya kerjakan."}, {"no": 53, "a": "Saya percaya bahwa latihan melalui pengalaman bekerja, adalah lebih bermanfaat daripada pendidikan teoritis.", "b": "Saya tidak peduli dengan apa yang dikerjakan oleh para pegawai saya di luar jam kantornya."}, {"no": 54, "a": "Saya merasa bahwa jam pencatat waktu datang dan pulangnya para pegawai, mengurangi keterlambatan.", "b": "Saya mengijinkan bawahan-bawahan saya untuk ikut serta mengambil keputusan dan saya selalu mematuhi keputusan yang dibuat berdasarkan atas suara terbanyak"}, {"no": 55, "a": "Saya mengambil keputusan-keputusan saya sendiri, tetapi saya dapat mempertimbangkan saran-saran yang wajar dari bawahanbawahan saya untuk saya manfaatkan, bilamana saya bertanya kepada mereka.", "b": "Saya merasa bahwa tujuan-tujuan Serikat Buruh dan tujuantujuan perusahaan adalah saling berbeda, dan saya mencoba untuk tidak membuat pandangan saya secara jelas."}, {"no": 56, "a": "Saya membuat keputusan-keputusan sendiri dan kemudian saya mencoba untuk “menjual” keputusan-keputusan itu kepada bawahan saya.", "b": "Apabila mungkin saya membentuk kelompok-kelompok kerja yang terdiri dari orang-orang yang sudah menjadi teman-teman baik saya."}, {"no": 57, "a": "Saya tidak akan ragu-ragu untuk mempekerjakan pegawaipegawai yang cacat jasmaninya, bilamana saya merasa pasti bahwa dia dapat mempelajari pekerjannya.", "b": "Saya mengabaikan pelanggar-pelanggar peraturan bila saya merasa pasti bahwa tidak ada satu orangpun yang mengetahui tentang pelanggaran-pelanggaran tersebut."}, {"no": 58, "a": "Apabila mungkin saya membentuk kelompok-kelompok kerja yang terdiri dari orang-orang yang sudah menjadi teman-teman baik saya.", "b": "Saya akan memberikan tugas-tugas yang sulit kepada bawahanbawahan saya yang berpengalaman, tetapi bila mereka memperoleh kesukaran, saya akan mengambil alih tanggung jawab mereka."}, {"no": 59, "a": "Saya membuat bawahan-bawahan saya bekerja keras, dan saya berusaha meyakinkan mereka bahwa biasanya mereka mendapat perlakuan yang adil dari “Dewan Direksi”.", "b": "Saya percaya bahwa suatu penerapan disiplin adalah merupakan seperangkat contoh untuk karyawan-karyawan lainnya."}, {"no": 60, "a": "Saya mencoba untuk membuat bawahan-bawahan saya merasa senang hatinya apabila mereka berbicara dengan saya.", "b": "Saya menyukai penggunaan dari skala penggajian karyawan."}, {"no": 61, "a": "Saya percaya bahwa kenaikan jabatan adalah semata-mata berdasarkan kemampuan yang ada.", "b": "Saya merasa bahwa masalah-masalah yang timbul di antara mereka sendiri, tanpa campur tangan dari saya."}, {"no": 62, "a": "Saya merasa bahwa Serikat-Serikat Buruh dan pimpinan perusahaan adalah bekerja untuk mencapai tujuan-tujuan yang sama.", "b": "Di dalam diskusi, saya memberikan fakta-fakta seperti apa yang mereka pahami, dan membiarkan mereka melukiskan kesimpulan-kesimpulan mereka sendiri"}, {"no": 63, "a": "Bila seorang karyawan tidak sanggup menyelesaikan tugasnya, saya akan membantu dia untuk menyelesaikan tugas tersebut.", "b": "Saya merasa bahwa semua karyawan pada jabatan yang sama seharusnya memperoleh gaji yang sama."}, {"no": 64, "a": "Saya mengijinkan bawahan-bawahan saya untuk ikut serta di dalam pengambilan keputusan, tetapi sayapun menyediakan sesuatu yang jitu untuk membuat keputusan terakhir.", "b": "Saya tidak akan ragu-ragu untuk mempekerjakan pegawaipegawai yang cacat jasmaninya, bilamana saya merasa bahwa dia dapat mempelajari pekerjaannya."}];
+const ARCHETYPES = {"executive": {"label": "Executive", "code": "E", "color": "indigo", "desc": "Task orientation tinggi, relationship orientation tinggi, dan sangat efektif. Berfokus pada pencapaian target sekaligus pengembangan tim. Menetapkan standar kerja tinggi, memperlakukan setiap orang secara berbeda sesuai kebutuhan, dan mendorong kerja tim serta komitmen bersama."}, "developer": {"label": "Developer", "code": "Dv", "color": "emerald", "desc": "Relationship orientation tinggi, task orientation rendah, namun tetap efektif. Memberdayakan dan mengembangkan potensi tim, memberi kepercayaan besar kepada bawahan, dan menciptakan iklim kerja yang suportif untuk pertumbuhan individu."}, "benevolent_autocrat": {"label": "Benevolent Autocrat", "code": "BA", "color": "amber", "desc": "Task orientation tinggi, relationship orientation rendah, namun efektif. Bergaya direktif dan mencapai hasil melalui ekspektasi yang jelas, tanpa menimbulkan resistensi berarti dari bawahan karena arahan yang tegas namun wajar."}, "bureaucrat": {"label": "Bureaucrat", "code": "Bu", "color": "slate", "desc": "Task orientation rendah, relationship orientation rendah, namun efektif. Menjaga aturan dan prosedur secara konsisten, mengandalkan sistem dan kontrol formal untuk memastikan hasil kerja tetap terjaga."}, "compromiser": {"label": "Compromiser", "code": "Co", "color": "orange", "desc": "Task orientation tinggi, relationship orientation tinggi, tetapi tidak efektif. Berusaha menyenangkan semua pihak sehingga sulit mengambil keputusan sulit, cenderung bereaksi terhadap tekanan alih-alih memimpin secara proaktif."}, "missionary": {"label": "Missionary", "code": "Mi", "color": "rose", "desc": "Relationship orientation tinggi, task orientation rendah, dan tidak efektif. Lebih mengutamakan keharmonisan hubungan dibandingkan kinerja, sehingga sering menghindari konflik meski hasil kerja tim menurun."}, "autocrat": {"label": "Autocrat", "code": "Au", "color": "red", "desc": "Task orientation tinggi, relationship orientation rendah, dan tidak efektif. Bergaya diktatorial, kurang mempercayai bawahan, dan cenderung mengasingkan anggota tim akibat pendekatan yang terlalu memaksa."}, "deserter": {"label": "Deserter", "code": "Ds", "color": "gray", "desc": "Task orientation rendah, relationship orientation rendah, dan tidak efektif. Cenderung menarik diri, pasif, dan menghindari tanggung jawab maupun keterlibatan aktif dalam pekerjaan tim."}};
+const ARCHETYPE_ORDER = ["executive","developer","benevolent_autocrat","bureaucrat","compromiser","missionary","autocrat","deserter"];
+
+/* ---------------------------- Scoring engine ---------------------------- */
+// Faithfully reproduces the "Otomatis Scoring" logic from the source MSDT
+// workbook: for each of the 8 dimension columns c=1..8,
+//   A_c = count of "a" among the c-th consecutive block of 8 items
+//         (items 8*(c-1)+1 .. 8*c)
+//   B_c = count of "b" among the c-th column-set of 8 items
+//         (items c, c+8, c+16, ... c+56)
+//   JUMLAH_c = A_c + B_c + KOREKSI_c
+// TO/RO/E are combinations of specific JUMLAH values, converted through the
+// workbook's threshold table, then classified into one of 8 archetypes.
+const KOREKSI = [1, 2, 1, 0, 3, -1, 0, -4];
+
+function computeScores(answers) {
+  const jumlah = [];
+  for (let c = 1; c <= 8; c++) {
+    let Ac = 0;
+    for (let q = 8 * (c - 1) + 1; q <= 8 * c; q++) if (answers[q] === "a") Ac++;
+    let Bc = 0;
+    for (let k = 0; k < 8; k++) { const q = c + 8 * k; if (answers[q] === "b") Bc++; }
+    jumlah.push(Ac + Bc + KOREKSI[c - 1]);
+  }
+  const TO = jumlah[2] + jumlah[3] + jumlah[6] + jumlah[7];
+  const RO = jumlah[1] + jumlah[3] + jumlah[5] + jumlah[7];
+  const E  = jumlah[4] + jumlah[5] + jumlah[6] + jumlah[7];
+  const O  = jumlah[0];
+
+  const konversi = (x) => {
+    if (x < 30) return 0;
+    if (x < 32) return 0.6;
+    if (x === 32) return 1.2;
+    if (x === 33) return 1.8;
+    if (x === 34) return 2.4;
+    if (x === 35) return 3;
+    if (x < 38) return 3.6;
+    return 4;
+  };
+
+  const TOc = konversi(TO), ROc = konversi(RO), Ec = konversi(E);
+  const hiTO = TOc > 2, hiRO = ROc > 2, hiE = Ec > 2;
+
+  let archetype;
+  if (hiTO && hiRO && hiE) archetype = "executive";
+  else if (hiTO && hiRO && !hiE) archetype = "compromiser";
+  else if (hiTO && !hiRO && hiE) archetype = "benevolent_autocrat";
+  else if (hiTO && !hiRO && !hiE) archetype = "autocrat";
+  else if (!hiTO && hiRO && hiE) archetype = "developer";
+  else if (!hiTO && hiRO && !hiE) archetype = "missionary";
+  else if (!hiTO && !hiRO && hiE) archetype = "bureaucrat";
+  else archetype = "deserter";
+
+  return { jumlah, TO, RO, E, O, TOc, ROc, Ec, archetype };
+}
+
+/* ------------------------------ App state -------------------------------- */
+const state = {
+  view: "home",              // home | candidate-register | candidate-quiz | candidate-thanks | recruiter-pin | recruiter-dashboard
+  candidate: { full_name: "", email: "", position: "", experience_years: "" },
+  answers: {},
+  qIndex: 0,
+  submitting: false,
+  recruiterAuthed: false,
+  pinError: false,
+  candidates: [],
+  loadingCandidates: false,
+  search: "",
+  filterArchetype: "",
+  filterPosition: "",
+  detailCandidate: null,
+  realtimeChannel: null,
+};
+
+function setState(patch) { Object.assign(state, patch); render(); }
+const $ = (sel, root=document) => root.querySelector(sel);
+const escapeHtml = (s) => (s ?? "").toString().replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+
+/* -------------------------------- Icons ---------------------------------- */
+function icon(name, cls="w-5 h-5") { return `<i data-lucide="${name}" class="${cls}"></i>`; }
+function refreshIcons() { if (window.lucide) window.lucide.createIcons(); }
+
+/* --------------------------------- Views ---------------------------------- */
+
+function renderHome() {
+  return `
+  <div class="min-h-screen flex items-center justify-center px-4 fade-in">
+    <div class="max-w-3xl w-full">
+      <div class="text-center mb-10">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-600 text-white mb-4 shadow-md">
+          ${icon("compass", "w-7 h-7")}
+        </div>
+        <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Management Style Diagnostic Test</h1>
+        <p class="text-slate-500 mt-2">Portal asesmen gaya manajemen berbasis model Task &amp; Relationship Orientation</p>
+      </div>
+      <div class="grid sm:grid-cols-2 gap-5">
+        <button onclick="goCandidateStart()" class="group text-left bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 transition p-6">
+          <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4 group-hover:bg-indigo-600 group-hover:text-white transition">
+            ${icon("user-check")}
+          </div>
+          <h2 class="font-semibold text-slate-900 text-lg">Portal Kandidat</h2>
+          <p class="text-sm text-slate-500 mt-1">Mulai asesmen MSDT sebagai kandidat pelamar.</p>
+          <span class="inline-flex items-center gap-1 text-indigo-600 text-sm font-medium mt-4">Mulai Tes ${icon("arrow-right","w-4 h-4")}</span>
+        </button>
+        <button onclick="goRecruiterStart()" class="group text-left bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 transition p-6">
+          <div class="w-11 h-11 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center mb-4 group-hover:bg-slate-800 group-hover:text-white transition">
+            ${icon("shield")}
+          </div>
+          <h2 class="font-semibold text-slate-900 text-lg">Dashboard Rekruter</h2>
+          <p class="text-sm text-slate-500 mt-1">Akses terproteksi untuk meninjau hasil kandidat.</p>
+          <span class="inline-flex items-center gap-1 text-slate-700 text-sm font-medium mt-4">Masuk ${icon("arrow-right","w-4 h-4")}</span>
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ----------------------------- Candidate flow ----------------------------- */
+
+function goCandidateStart() { setState({ view: "candidate-register" }); }
+
+function renderCandidateRegister() {
+  const c = state.candidate;
+  return `
+  <div class="min-h-screen flex items-center justify-center px-4 py-10 fade-in">
+    <div class="max-w-lg w-full bg-white border border-slate-200 rounded-xl shadow-sm p-8">
+      <button onclick="setState({view:'home'})" class="text-slate-400 hover:text-slate-600 flex items-center gap-1 text-sm mb-6">${icon("arrow-left","w-4 h-4")} Kembali</button>
+      <h2 class="text-xl font-bold text-slate-900">Data Diri Kandidat</h2>
+      <p class="text-sm text-slate-500 mt-1 mb-6">Lengkapi data berikut sebelum memulai asesmen MSDT (64 pernyataan).</p>
+      <form id="regForm" class="space-y-4" onsubmit="return submitRegister(event)">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Nama Lengkap</label>
+          <input required name="full_name" type="text" value="${escapeHtml(c.full_name)}"
+            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition" placeholder="cth. Budi Santoso">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+          <input required name="email" type="email" value="${escapeHtml(c.email)}"
+            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition" placeholder="nama@email.com">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Posisi yang Dilamar</label>
+          <input required name="position" type="text" value="${escapeHtml(c.position)}"
+            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition" placeholder="cth. Operations Manager">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Lama Pengalaman Kerja (tahun)</label>
+          <input required name="experience_years" type="number" min="0" step="0.5" value="${escapeHtml(c.experience_years)}"
+            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition" placeholder="cth. 5">
+        </div>
+        <p id="regError" class="text-sm text-red-600 hidden">Mohon lengkapi seluruh kolom dengan benar.</p>
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg py-2.5 text-sm transition flex items-center justify-center gap-2">
+          Mulai Asesmen ${icon("arrow-right","w-4 h-4")}
+        </button>
+      </form>
+    </div>
+  </div>`;
+}
+
+function submitRegister(e) {
+  e.preventDefault();
+  const f = e.target;
+  const fd = new FormData(f);
+  const full_name = (fd.get("full_name")||"").trim();
+  const email = (fd.get("email")||"").trim();
+  const position = (fd.get("position")||"").trim();
+  const experience_years = fd.get("experience_years");
+  if (!full_name || !email || !position || experience_years === "" || Number(experience_years) < 0) {
+    $("#regError").classList.remove("hidden");
+    return false;
+  }
+  setState({
+    candidate: { full_name, email, position, experience_years: Number(experience_years) },
+    answers: {}, qIndex: 0, view: "candidate-quiz"
+  });
+  return false;
+}
+
+function renderCandidateQuiz() {
+  const total = QUESTIONS.length;
+  const idx = state.qIndex;
+  const q = QUESTIONS[idx];
+  const selected = state.answers[q.no];
+  const pct = Math.round(((idx) / total) * 100);
+  const answeredCount = Object.keys(state.answers).length;
+
+  const optionCard = (letter, text) => `
+    <button onclick="selectAnswer(${q.no}, '${letter}')"
+      class="w-full text-left p-4 rounded-xl border-2 transition flex gap-3 items-start
+        ${selected === letter ? "border-indigo-600 bg-indigo-50" : "border-slate-200 hover:border-indigo-300 bg-white"}">
+      <span class="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold
+        ${selected === letter ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-500"}">${letter.toUpperCase()}</span>
+      <span class="text-sm text-slate-700 leading-relaxed">${escapeHtml(text)}</span>
+    </button>`;
+
+  return `
+  <div class="min-h-screen px-4 py-8 fade-in">
+    <div class="max-w-2xl mx-auto">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-medium text-slate-500">Pernyataan ${idx+1} dari ${total}</span>
+        <span class="text-xs font-medium text-indigo-600">${answeredCount}/${total} terjawab</span>
+      </div>
+      <div class="w-full bg-slate-200 rounded-full h-2 mb-8 overflow-hidden">
+        <div class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width:${pct}%"></div>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 sm:p-8">
+        <p class="text-xs uppercase tracking-wide text-indigo-500 font-semibold mb-3">Pilih pernyataan yang paling menggambarkan diri Anda</p>
+        <div class="space-y-3">
+          ${optionCard("a", q.a)}
+          ${optionCard("b", q.b)}
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between mt-6">
+        <button onclick="prevQuestion()" ${idx===0 ? "disabled" : ""}
+          class="inline-flex items-center gap-1 text-sm font-medium px-4 py-2 rounded-lg border border-slate-300 text-slate-600 bg-white hover:bg-slate-50 transition disabled:opacity-50 disabled:cursor-not-allowed">
+          ${icon("arrow-left","w-4 h-4")} Sebelumnya
+        </button>
+        ${idx === total - 1 ? `
+          <button onclick="finishQuiz()" ${!selected ? "disabled" : ""}
+            class="inline-flex items-center gap-2 text-sm font-medium px-5 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+            ${state.submitting ? `<span class="spinner !w-4 !h-4 !border-2"></span> Mengirim...` : `Submit ${icon("check","w-4 h-4")}`}
+          </button>` : `
+          <button onclick="nextQuestion()" ${!selected ? "disabled" : ""}
+            class="inline-flex items-center gap-1 text-sm font-medium px-5 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+            Selanjutnya ${icon("arrow-right","w-4 h-4")}
+          </button>`}
+      </div>
+    </div>
+  </div>`;
+}
+
+function selectAnswer(qno, letter) {
+  state.answers[qno] = letter;
+  render();
+}
+function nextQuestion() {
+  if (!state.answers[QUESTIONS[state.qIndex].no]) return;
+  if (state.qIndex < QUESTIONS.length - 1) setState({ qIndex: state.qIndex + 1 });
+}
+function prevQuestion() {
+  if (state.qIndex > 0) setState({ qIndex: state.qIndex - 1 });
+}
+
+async function finishQuiz() {
+  if (!state.answers[QUESTIONS[state.qIndex].no] || state.submitting) return;
+  setState({ submitting: true });
+  const scores = computeScores(state.answers);
+  const payload = {
+    full_name: state.candidate.full_name,
+    email: state.candidate.email,
+    position: state.candidate.position,
+    experience_years: state.candidate.experience_years,
+    answers: state.answers,
+    jumlah: scores.jumlah,
+    score_to: scores.TO,
+    score_ro: scores.RO,
+    score_e: scores.E,
+    score_o: scores.O,
+    archetype: scores.archetype,
+  };
+  try {
+    const { error } = await supabaseClient.from(CONFIG.TABLE).insert(payload);
+    if (error) console.error("Supabase insert error:", error);
+  } catch (err) {
+    console.error(err);
+  }
+  setState({ submitting: false, view: "candidate-thanks" });
+}
+
+function renderCandidateThanks() {
+  return `
+  <div class="min-h-screen flex items-center justify-center px-4 fade-in">
+    <div class="max-w-md w-full text-center bg-white border border-slate-200 rounded-xl shadow-sm p-10">
+      <div class="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-5">
+        ${icon("check-circle-2","w-9 h-9")}
+      </div>
+      <h2 class="text-xl font-bold text-slate-900">Terima Kasih!</h2>
+      <p class="text-sm text-slate-500 mt-2 leading-relaxed">
+        Jawaban Anda telah berhasil disimpan. Tim rekrutmen kami akan meninjau hasil asesmen ini sebagai bagian dari proses seleksi Anda.
+      </p>
+      <button onclick="setState({view:'home', candidate:{full_name:'',email:'',position:'',experience_years:''}, answers:{}, qIndex:0})"
+        class="mt-8 inline-flex items-center gap-2 text-sm font-medium px-5 py-2.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition">
+        Selesai
+      </button>
+    </div>
+  </div>`;
+}
+
+/* ----------------------------- Recruiter flow ----------------------------- */
+
+function goRecruiterStart() { setState({ view: "recruiter-pin", pinError: false }); }
+
+function renderRecruiterPin() {
+  return `
+  <div class="min-h-screen flex items-center justify-center px-4 fade-in">
+    <div class="max-w-sm w-full bg-white border border-slate-200 rounded-xl shadow-sm p-8 text-center">
+      <button onclick="setState({view:'home'})" class="text-slate-400 hover:text-slate-600 flex items-center gap-1 text-sm mb-6">${icon("arrow-left","w-4 h-4")} Kembali</button>
+      <div class="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center mx-auto mb-4">
+        ${icon("lock")}
+      </div>
+      <h2 class="text-lg font-bold text-slate-900">Akses Rekruter</h2>
+      <p class="text-sm text-slate-500 mt-1 mb-6">Masukkan PIN untuk membuka dashboard eksekutif.</p>
+      <form onsubmit="return checkPin(event)" class="space-y-3">
+        <input id="pinInput" type="password" inputmode="numeric" maxlength="12" autofocus
+          class="w-full text-center tracking-[0.4em] rounded-lg border ${state.pinError ? "border-red-400 focus:ring-red-400" : "border-slate-300 focus:ring-indigo-500"} px-3 py-2.5 text-lg font-semibold focus:ring-2 focus:border-indigo-500 outline-none transition"
+          placeholder="••••">
+        ${state.pinError ? `<p class="text-xs text-red-600">PIN salah. Silakan coba lagi.</p>` : ""}
+        <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-lg py-2.5 text-sm transition">Buka Dashboard</button>
+      </form>
+    </div>
+  </div>`;
+}
+
+function checkPin(e) {
+  e.preventDefault();
+  const val = $("#pinInput").value;
+  if (val === CONFIG.RECRUITER_PIN) {
+    setState({ recruiterAuthed: true, view: "recruiter-dashboard" });
+    loadCandidates();
+    subscribeRealtime();
+  } else {
+    setState({ pinError: true });
+  }
+  return false;
+}
+
+async function loadCandidates() {
+  setState({ loadingCandidates: true });
+  try {
+    const { data, error } = await supabaseClient
+      .from(CONFIG.TABLE)
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) { console.error(error); setState({ loadingCandidates: false, candidates: [] }); return; }
+    setState({ candidates: data || [], loadingCandidates: false });
+  } catch (err) {
+    console.error(err);
+    setState({ loadingCandidates: false });
+  }
+}
+
+function subscribeRealtime() {
+  if (state.realtimeChannel) return;
+  const channel = supabaseClient
+    .channel("public:" + CONFIG.TABLE)
+    .on("postgres_changes", { event: "*", schema: "public", table: CONFIG.TABLE }, () => loadCandidates())
+    .subscribe();
+  state.realtimeChannel = channel;
+}
+
+function archetypeBadge(key) {
+  const a = ARCHETYPES[key] || { label: key, color: "slate" };
+  const colorMap = {
+    indigo: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    emerald: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    amber: "bg-amber-50 text-amber-700 border-amber-200",
+    slate: "bg-slate-100 text-slate-700 border-slate-200",
+    orange: "bg-orange-50 text-orange-700 border-orange-200",
+    rose: "bg-rose-50 text-rose-700 border-rose-200",
+    red: "bg-red-50 text-red-700 border-red-200",
+    gray: "bg-gray-100 text-gray-700 border-gray-200",
+  };
+  return `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${colorMap[a.color]||colorMap.slate}">${a.label}</span>`;
+}
+
+function getFilteredCandidates() {
+  const s = state.search.trim().toLowerCase();
+  return state.candidates.filter(c => {
+    const matchesSearch = !s || c.full_name.toLowerCase().includes(s) || c.email.toLowerCase().includes(s);
+    const matchesArchetype = !state.filterArchetype || c.archetype === state.filterArchetype;
+    const matchesPosition = !state.filterPosition || c.position === state.filterPosition;
+    return matchesSearch && matchesArchetype && matchesPosition;
+  });
+}
+
+function quadrantSVG(candidates) {
+  const W = 560, H = 420, pad = 46;
+  const plotW = W - pad*2, plotH = H - pad*2;
+  // Axis domain: raw TO / RO scores roughly range 8..56; use a stable domain.
+  const minV = 8, maxV = 56, mid = 33.5;
+  const xOf = (v) => pad + ((v - minV) / (maxV - minV)) * plotW;
+  const yOf = (v) => pad + plotH - ((v - minV) / (maxV - minV)) * plotH;
+  const midX = xOf(mid), midY = yOf(mid);
+
+  const dots = candidates.map(c => {
+    const x = xOf(c.score_to), y = yOf(c.score_ro);
+    const hiE = c.score_e > 33.5;
+    const fill = hiE ? "#4f46e5" : "#f43f5e";
+    return `<g class="cursor-pointer" onclick="openDetail('${c.id}')">
+      <circle cx="${x}" cy="${y}" r="6.5" fill="${fill}" fill-opacity="0.85" stroke="white" stroke-width="1.5"/>
+      <title>${escapeHtml(c.full_name)} — ${ARCHETYPES[c.archetype]?.label || c.archetype}</title>
+    </g>`;
+  }).join("");
+
+  return `
+  <svg viewBox="0 0 ${W} ${H}" class="w-full h-auto">
+    <rect x="${pad}" y="${pad}" width="${plotW/2}" height="${plotH/2}" fill="#eef2ff" opacity="0.5"/>
+    <rect x="${midX}" y="${pad}" width="${plotW/2}" height="${plotH/2}" fill="#f0fdf4" opacity="0.5"/>
+    <rect x="${pad}" y="${midY}" width="${plotW/2}" height="${plotH/2}" fill="#fff7ed" opacity="0.5"/>
+    <rect x="${midX}" y="${midY}" width="${plotW/2}" height="${plotH/2}" fill="#fef2f2" opacity="0.5"/>
+    <line x1="${pad}" y1="${midY}" x2="${W-pad}" y2="${midY}" stroke="#cbd5e1" stroke-width="1.5"/>
+    <line x1="${midX}" y1="${pad}" x2="${midX}" y2="${H-pad}" stroke="#cbd5e1" stroke-width="1.5"/>
+    <rect x="${pad}" y="${pad}" width="${plotW}" height="${plotH}" fill="none" stroke="#94a3b8" stroke-width="1"/>
+    <text x="${W/2}" y="${H-14}" text-anchor="middle" font-size="12" fill="#64748b" font-weight="600">Task Orientation (TO) →</text>
+    <text x="16" y="${H/2}" text-anchor="middle" font-size="12" fill="#64748b" font-weight="600" transform="rotate(-90 16 ${H/2})">Relationship Orientation (RO) →</text>
+    <text x="${pad+6}" y="${pad+16}" font-size="11" fill="#94a3b8">Missionary / Developer</text>
+    <text x="${W-pad-6}" y="${pad+16}" text-anchor="end" font-size="11" fill="#94a3b8">Executive / Compromiser</text>
+    <text x="${pad+6}" y="${H-pad-8}" font-size="11" fill="#94a3b8">Deserter / Bureaucrat</text>
+    <text x="${W-pad-6}" y="${H-pad-8}" text-anchor="end" font-size="11" fill="#94a3b8">Autocrat / Ben. Autocrat</text>
+    ${dots}
+  </svg>
+  <div class="flex items-center gap-4 mt-3 text-xs text-slate-500">
+    <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span> Efektivitas tinggi</span>
+    <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Efektivitas rendah</span>
+  </div>`;
+}
+
+function renderRecruiterDashboard() {
+  const filtered = getFilteredCandidates();
+  const positions = [...new Set(state.candidates.map(c => c.position))];
+
+  const rows = filtered.map(c => `
+    <tr class="hover:bg-slate-50 transition cursor-pointer" onclick="openDetail('${c.id}')">
+      <td class="px-4 py-3 text-sm font-medium text-slate-900">${escapeHtml(c.full_name)}</td>
+      <td class="px-4 py-3 text-sm text-slate-500">${escapeHtml(c.email)}</td>
+      <td class="px-4 py-3 text-sm text-slate-600">${escapeHtml(c.position)}</td>
+      <td class="px-4 py-3 text-sm text-slate-600">${c.experience_years} th</td>
+      <td class="px-4 py-3 text-sm text-slate-500">${new Date(c.created_at).toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"})}</td>
+      <td class="px-4 py-3 text-sm text-center text-slate-700 font-medium">${c.score_to}</td>
+      <td class="px-4 py-3 text-sm text-center text-slate-700 font-medium">${c.score_ro}</td>
+      <td class="px-4 py-3 text-sm text-center text-slate-700 font-medium">${c.score_e}</td>
+      <td class="px-4 py-3">${archetypeBadge(c.archetype)}</td>
+      <td class="px-4 py-3 text-right">
+        <button onclick="event.stopPropagation(); openDetail('${c.id}')" class="text-slate-400 hover:text-indigo-600 transition">${icon("eye","w-4 h-4")}</button>
+      </td>
+    </tr>`).join("");
+
+  return `
+  <div class="min-h-screen bg-slate-50 fade-in">
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center">${icon("layout-dashboard","w-5 h-5")}</div>
+          <div>
+            <h1 class="font-bold text-slate-900 text-sm sm:text-base leading-tight">Recruiter Executive Dashboard</h1>
+            <p class="text-xs text-slate-400">Management Style Diagnostic Test</p>
+          </div>
+        </div>
+        <button onclick="setState({view:'home', recruiterAuthed:false})" class="text-sm text-slate-500 hover:text-slate-800 inline-flex items-center gap-1">
+          ${icon("log-out","w-4 h-4")} Keluar
+        </button>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        ${statCard("users", "Total Kandidat", state.candidates.length)}
+        ${statCard("award", "Archetype Terbanyak", topArchetypeLabel())}
+        ${statCard("trending-up", "Rata-rata TO", avgOf("score_to"))}
+        ${statCard("heart-handshake", "Rata-rata RO", avgOf("score_ro"))}
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-white border border-slate-200 rounded-xl shadow-sm p-5">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-3 justify-between mb-4">
+            <h2 class="font-semibold text-slate-900 text-sm">Data Kandidat</h2>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <div class="relative">
+                ${icon("search","w-4 h-4 absolute left-2.5 top-2.5 text-slate-400")}
+                <input value="${escapeHtml(state.search)}" oninput="setState({search:this.value})" placeholder="Cari nama / email..."
+                  class="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 outline-none w-full sm:w-56">
+              </div>
+              <select onchange="setState({filterArchetype:this.value})" class="text-sm rounded-lg border border-slate-300 px-2 py-1.5 focus:ring-2 focus:ring-indigo-500 outline-none">
+                <option value="">Semua Archetype</option>
+                ${ARCHETYPE_ORDER.map(k => `<option value="${k}" ${state.filterArchetype===k?"selected":""}>${ARCHETYPES[k].label}</option>`).join("")}
+              </select>
+              <select onchange="setState({filterPosition:this.value})" class="text-sm rounded-lg border border-slate-300 px-2 py-1.5 focus:ring-2 focus:ring-indigo-500 outline-none">
+                <option value="">Semua Posisi</option>
+                ${positions.map(p => `<option value="${escapeHtml(p)}" ${state.filterPosition===p?"selected":""}>${escapeHtml(p)}</option>`).join("")}
+              </select>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto -mx-5">
+            <div class="inline-block min-w-full align-middle px-5">
+              ${state.loadingCandidates ? `
+                <div class="flex items-center justify-center py-16"><div class="spinner"></div></div>
+              ` : filtered.length === 0 ? `
+                <div class="text-center py-16 text-sm text-slate-400">Belum ada data kandidat yang cocok.</div>
+              ` : `
+              <table class="min-w-full divide-y divide-slate-200">
+                <thead>
+                  <tr class="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    <th class="px-4 py-2">Nama</th>
+                    <th class="px-4 py-2">Email</th>
+                    <th class="px-4 py-2">Posisi</th>
+                    <th class="px-4 py-2">Pengalaman</th>
+                    <th class="px-4 py-2">Tanggal</th>
+                    <th class="px-4 py-2 text-center">TO</th>
+                    <th class="px-4 py-2 text-center">RO</th>
+                    <th class="px-4 py-2 text-center">E</th>
+                    <th class="px-4 py-2">Archetype</th>
+                    <th class="px-4 py-2"></th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">${rows}</tbody>
+              </table>`}
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
+          <h2 class="font-semibold text-slate-900 text-sm mb-1">Peta Kuadran Manajerial</h2>
+          <p class="text-xs text-slate-400 mb-3">Task Orientation vs Relationship Orientation</p>
+          ${quadrantSVG(filtered)}
+        </div>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-5">
+        <h2 class="font-semibold text-slate-900 text-sm mb-4">8 Arketipe Gaya Manajemen</h2>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          ${ARCHETYPE_ORDER.map(k => `
+            <div class="border border-slate-200 rounded-lg p-4">
+              <div class="flex items-center justify-between mb-2">
+                <span class="font-semibold text-sm text-slate-900">${ARCHETYPES[k].label}</span>
+                ${archetypeBadge(k)}
+              </div>
+              <p class="text-xs text-slate-500 leading-relaxed">${ARCHETYPES[k].desc}</p>
+            </div>`).join("")}
+        </div>
+      </div>
+    </main>
+  </div>
+  ${state.detailCandidate ? renderDetailModal(state.detailCandidate) : ""}`;
+}
+
+function statCard(iconName, label, value) {
+  return `
+  <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-4">
+    <div class="flex items-center gap-2 text-slate-400 mb-2">${icon(iconName,"w-4 h-4")}<span class="text-xs font-medium uppercase tracking-wide">${label}</span></div>
+    <div class="text-xl font-bold text-slate-900">${value}</div>
+  </div>`;
+}
+function avgOf(field) {
+  if (!state.candidates.length) return "-";
+  const v = state.candidates.reduce((s,c)=>s+Number(c[field]||0),0)/state.candidates.length;
+  return v.toFixed(1);
+}
+function topArchetypeLabel() {
+  if (!state.candidates.length) return "-";
+  const counts = {};
+  state.candidates.forEach(c => counts[c.archetype] = (counts[c.archetype]||0)+1);
+  const top = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+  return top ? (ARCHETYPES[top[0]]?.label || top[0]) : "-";
+}
+
+function openDetail(id) {
+  const c = state.candidates.find(x => x.id === id);
+  setState({ detailCandidate: c || null });
+}
+function closeDetail() { setState({ detailCandidate: null }); }
+
+function renderDetailModal(c) {
+  const answerRows = QUESTIONS.map(q => {
+    const ans = c.answers[q.no] || c.answers[String(q.no)];
+    return `<div class="py-2 border-b border-slate-100 last:border-0">
+      <div class="text-xs text-slate-400 mb-1">Pernyataan ${q.no}</div>
+      <div class="text-sm text-slate-700">${escapeHtml(ans==='a'?q.a:q.b)} <span class="text-xs text-slate-400">(pilihan ${(ans||'-').toUpperCase()})</span></div>
+    </div>`;
+  }).join("");
+
+  return `
+  <div class="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50 fade-in" onclick="if(event.target===this) closeDetail()">
+    <div class="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[85vh] flex flex-col">
+      <div class="flex items-start justify-between p-5 border-b border-slate-200">
+        <div>
+          <h3 class="font-bold text-slate-900">${escapeHtml(c.full_name)}</h3>
+          <p class="text-sm text-slate-500">${escapeHtml(c.email)} · ${escapeHtml(c.position)} · ${c.experience_years} th pengalaman</p>
+        </div>
+        <button onclick="closeDetail()" class="text-slate-400 hover:text-slate-700">${icon("x")}</button>
+      </div>
+      <div class="p-5 border-b border-slate-100 grid grid-cols-4 gap-3 text-center">
+        <div><div class="text-xs text-slate-400">TO</div><div class="font-bold text-slate-900">${c.score_to}</div></div>
+        <div><div class="text-xs text-slate-400">RO</div><div class="font-bold text-slate-900">${c.score_ro}</div></div>
+        <div><div class="text-xs text-slate-400">E</div><div class="font-bold text-slate-900">${c.score_e}</div></div>
+        <div>${archetypeBadge(c.archetype)}</div>
+      </div>
+      <div class="p-5 overflow-y-auto flex-1">
+        <p class="text-xs font-semibold uppercase text-slate-400 mb-2">Detail Jawaban (${QUESTIONS.length} pernyataan)</p>
+        ${answerRows}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* --------------------------------- Router --------------------------------- */
+function render() {
+  const app = $("#app");
+  let html = "";
+  switch (state.view) {
+    case "home": html = renderHome(); break;
+    case "candidate-register": html = renderCandidateRegister(); break;
+    case "candidate-quiz": html = renderCandidateQuiz(); break;
+    case "candidate-thanks": html = renderCandidateThanks(); break;
+    case "recruiter-pin": html = renderRecruiterPin(); break;
+    case "recruiter-dashboard": html = renderRecruiterDashboard(); break;
+    default: html = renderHome();
+  }
+  app.innerHTML = html;
+  refreshIcons();
+}
+
+render();
+</script>
+</body>
+</html>
